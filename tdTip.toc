@@ -1,0 +1,10 @@
+#@debug@
+## Interface: 20501
+#@end-debug@
+#@project-interface@
+## Title: tdTip
+## Author: Dencer
+## Version: @project-version@
+## SavedVariables:
+
+Load.xml
