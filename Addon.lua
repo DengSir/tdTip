@@ -9,3 +9,45 @@ local ns = select(2, ...)
 ---@class Addon: AceAddon-3.0
 local Addon = LibStub('AceAddon-3.0'):NewAddon('tdTip')
 ns.AddOn = Addon
+
+function Addon:OnInitialize()
+    ---@class DATABASE
+    local db = {
+        ---@class DATABASE.profile
+        profile = { --
+            showPvpName = true,
+            showGuildRank = true,
+
+            posType = 3,
+            posCustom = {point = 'BOTTOMRIGHT', x = -300, y = 200},
+            barHeight = 4,
+            barPadding = 9,
+
+            ---@class DATABASE.profile.colors
+            colors = {
+                guildColor = {r = 1, g = 0, b = 1},
+                friendColor = {r = 0, g = 1, b = 0.2},
+                enemyColor = {r = 1, g = 0, b = 0},
+                titleColor = {r = 0.6, g = 0.9, b = 0.9},
+            },
+        },
+    }
+    ---@class db: AceDB-3.0, DATABASE
+    self.db = LibStub('AceDB-3.0'):New('TDDB_TIP', db)
+
+    ---@type DATABASE.profile.colors
+    ns.colors = {}
+
+    self:OnProfileUpdate()
+end
+
+function Addon:OnProfileUpdate()
+    ---@type DATABASE.profile
+    ns.profile = self.db.profile
+
+    local colors = wipe(ns.colors)
+
+    for k, v in pairs(ns.profile.colors) do
+        colors[k] = ns.colorHex(v)
+    end
+end

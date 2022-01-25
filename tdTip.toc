@@ -5,6 +5,6 @@
 ## Title: tdTip
 ## Author: Dencer
 ## Version: @project-version@
-## SavedVariables:
+## SavedVariables: TDDB_TIP
 
 Load.xml

@@ -5,4 +5,5 @@
     <Script file="Api.lua" />
     <Script file="Addon.lua" />
     <Script file="Core/Unit.lua" />
+    <Script file="Core/Anchor.lua" />
 </Ui>

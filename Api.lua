@@ -59,9 +59,44 @@ local L = setmetatable({}, {
     end,
 })
 
-ns.CLASSIFICATION = {
+ns.CLASSIFICATIONS = {
     elite = format('|cffffff33%s|r', ELITE),
     worldboss = format('|cffff0000%s|r', BOSS),
     rare = format('|cffff66ff%s|r', L.Rare),
     rareelite = format('|cffffaaff%s%s|r', L.Rare, ELITE),
+}
+
+ns.RAID_ICONS = setmetatable({}, {
+    __index = function(t, k)
+        t[k] = format([[Interface\TargetingFrame\UI-RaidTargetingIcon_%d]], k)
+        return t[k]
+    end,
+})
+
+ns.FACTION_ICONS = {
+    Alliance = [[Interface\Timer\Alliance-Logo]],
+    Horde = [[Interface\Timer\Horde-Logo]],
+    Neutral = [[Interface\Timer\Panda-Logo]],
+}
+
+ns.RAID_ICON_STRINGS = setmetatable({}, {
+    __index = function(t, k)
+        t[k] = format([[|TInterface\TargetingFrame\UI-RaidTargetingIcon_%d:18:18|t]], k)
+        return t[k]
+    end,
+})
+
+ns.CLASS_ICON_STRINGS = setmetatable({}, {
+    __index = function(t, k)
+        local coords = CLASS_ICON_TCOORDS[k]
+        t[k] = format([[|TInterface\WorldStateFrame\ICONS-CLASSES:%%d:%%d:0:0:256:256:%d:%d:%d:%d|t]], coords[1] * 0xFF,
+                      coords[2] * 0xFF, coords[3] * 0xFF, coords[4] * 0xFF)
+        return t[k]
+    end,
+})
+
+ns.POS_TYPE = {
+    System = 1,
+    Cursor = 2,
+    Custom = 3,
 }

@@ -10,8 +10,6 @@ local strcolor = ns.strcolor
 
 ---@type LibTooltipExtra-1.0
 local LibTooltipExtra = LibStub('LibTooltipExtra-1.0')
----@type StatusBar
-local GameTooltipStatusBar = _G.GameTooltipStatusBar
 
 ---@class Unit: AceAddon-3.0, AceHook-3.0
 local Unit = ns.AddOn:NewModule('Unit', 'AceHook-3.0')
@@ -43,46 +41,48 @@ function Unit:OnInitialize()
     self.PLAYER_FACTION = select(2, UnitFactionGroup('player'))
 
     self.tip = LibTooltipExtra:New(GameTooltip)
+    ---@type StatusBar
     self.bar = GameTooltipStatusBar
 
-    local n = 0
-    local function newTexture()
-        local texture = self.tip:CreateTexture(nil, 'OVERLAY')
-        texture:Hide()
-        texture:SetSize(24, 24)
-        texture:SetPoint('BOTTOMLEFT', self.tip, 'TOPLEFT', 29 * n + 5, 0)
-        n = n + 1
-        return texture
-    end
+    self.raidIcon = self.tip:CreateTexture(nil, 'OVERLAY')
+    self.raidIcon:SetSize(32, 32)
+    self.raidIcon:SetPoint('BOTTOM', self.tip.NineSlice, 'TOP', 0, -10)
 
-    self.classIcon = newTexture()
-    self.raidIcon = newTexture()
     self.factionIcon = self.tip:CreateTexture(nil, 'ARTWORK')
     self.factionIcon:SetSize(64, 64)
     self.factionIcon:SetPoint('TOPRIGHT', self.tip.NineSlice, 'TOPRIGHT')
     self.factionIcon:SetAlpha(0.5)
-
-    self.classIcon:SetTexture([[Interface\WORLDSTATEFRAME\Icons-Classes]])
 end
 
 function Unit:OnEnable()
-    self.bar:SetHeight(5)
+    local padding = ns.profile.barPadding
+    self.bar.lockColor = true
+    self.bar:SetHeight(ns.profile.barHeight)
+    self.bar:SetStatusBarTexture([[Interface\AddOns\tdTip\Media\StatusBar]])
     self.bar:ClearAllPoints()
-    self.bar:SetPoint('BOTTOMLEFT', GameTooltip.NineSlice, 'BOTTOMLEFT', 5, 5)
-    self.bar:SetPoint('BOTTOMRIGHT', GameTooltip.NineSlice, 'BOTTOMRIGHT', -5, 5)
+    self.bar:SetPoint('BOTTOMLEFT', GameTooltip.NineSlice, 'BOTTOMLEFT', padding, padding)
+    self.bar:SetPoint('BOTTOMRIGHT', GameTooltip.NineSlice, 'BOTTOMRIGHT', -padding, padding)
 
     self:HookScript(self.tip, 'OnTooltipSetUnit')
     self:HookScript(self.tip, 'OnTooltipCleared')
-    self:HookScript(self.bar, 'OnValueChanged', 'OnBarValueChanged')
+end
+
+function Unit:OnDisable()
+    self.bar.lockColor = nil
 end
 
 function Unit:OnTooltipCleared()
-    self.tip.NineSlice:SetBorderColor(1, 1, 1)
-    self.tip.NineSlice:ClearAllPoints()
-    self.tip.NineSlice:SetAllPoints(self.tip)
-    self.classIcon:Hide()
+    self.tip:SetBackdropBorderColor(1, 1, 1)
     self.raidIcon:Hide()
     self.factionIcon:Hide()
+end
+
+function Unit:OnBarValueChanged()
+    local info = self.info
+    local color = info.classColor or info.reactionColor
+    if color then
+        self.bar:SetStatusBarColor(color.r, color.g, color.b)
+    end
 end
 
 function Unit:OnTooltipSetUnit()
@@ -98,28 +98,9 @@ function Unit:OnTooltipSetUnit()
     self:UpdateNpcTitleLine()
     self:UpdateBorder()
     self:UpdateStatusBar()
-    self:UpdateClassIcon()
-    self:UpdateRaidIcon()
     self:UpdateFactionIcon()
-    self:UpdateMargins()
+    self:UpdateRaidIcon()
 end
-
-function Unit:OnBarValueChanged()
-    local info = self.info
-    local color = info.classColor or info.reactionColor
-    if color then
-        self.bar:SetStatusBarColor(color.r, color.g, color.b)
-    end
-end
-
-local CLASS_ICONS = setmetatable({}, {
-    __index = function(t, k)
-        local coords = CLASS_ICON_TCOORDS[k]
-        t[k] = format([[|TInterface\WorldStateFrame\ICONS-CLASSES:%%d:%%d:0:0:256:256:%d:%d:%d:%d|t %%s]],
-                      coords[1] * 0xFF, coords[2] * 0xFF, coords[3] * 0xFF, coords[4] * 0xFF)
-        return t[k]
-    end,
-})
 
 function Unit:UpdateInfo(unit)
     ---@class UnitInfo
@@ -139,15 +120,15 @@ function Unit:UpdateInfo(unit)
         info.isFriend = info.faction == self.PLAYER_FACTION
         info.level = UnitLevel(unit)
         info.race, info.raceFileName = UnitRace(unit)
+        info.guild, info.guildRank = GetGuildInfo(unit)
         info.class, info.classFileName = UnitClass(unit)
-        info.guild, info.guildRank, info.guildIndex, info.guildRealm = GetGuildInfo(unit)
         info.classColor = RAID_CLASS_COLORS[info.classFileName]
     elseif info.isBattlePet then
         info.level = UnitBattlePetLevel(unit)
     else
         info.level = UnitLevel(unit)
         info.type = UnitPlayerControlled(unit) and UnitCreatureFamily(unit) or UnitCreatureType(unit)
-        info.classification = ns.CLASSIFICATION[UnitClassification(unit)]
+        info.classification = ns.CLASSIFICATIONS[UnitClassification(unit)]
         info.reaction = UnitReaction(unit, 'player')
         info.isTapDenied = UnitIsTapDenied(unit)
         info.reactionColor = FACTION_BAR_COLORS[info.reaction]
@@ -183,13 +164,22 @@ function Unit:UpdateInfo(unit)
 
     if info.isPlayer then
         info.class = strcolor(info.class, info.classColor)
-        info.name = strcolor(info.name, info.classColor)
-        info.race = strcolor(info.race, info.isFriend and ns.FRIEND_COLOR or ns.ENEMY_COLOR)
+        info.race = strcolor(info.race, info.isFriend and ns.colors.friendColor or ns.colors.enemyColor)
+        info.classIcon = ns.CLASS_ICON_STRINGS[info.classFileName]:format(18, 18)
 
-        info.name = CLASS_ICONS[info.classFileName]:format(18, 18, info.name)
+        if ns.profile.showPvpName then
+            local pvpName = UnitPVPName(unit)
+
+            info.name = pvpName:gsub(info.name, strcolor(info.name, info.classColor))
+            info.name = strcolor(info.name, ns.colors.titleColor)
+        else
+            info.name = strcolor(info.name, info.classColor)
+        end
 
         if info.guild then
-            info.guild = strcolor(format('<%s - %s>', info.guild, info.guildRank), ns.GUILD_COLOR)
+            info.guild = strcolor(format('<%s>', info.guild), ns.colors.guildColor)
+            info.guildRank =
+                ns.profile.showGuildRank and strcolor(format('(%s)', info.guildRank), ns.colors.guildColor) or nil
         end
     else
         if info.isTapDenied then
@@ -203,24 +193,42 @@ function Unit:UpdateInfo(unit)
         if info.lineLevel > 2 then
             local title = self.tip:GetFontStringLeft(2):GetText()
 
-            info.title = strcolor(format('<%s>', title), ns.NPC_TITLE_COLOR)
+            info.title = strcolor(format('<%s>', title), ns.colors.titleColor)
         end
     end
 
-    info.marginBottom = not info.isDead and 6 or nil
-    info.marginRight = info.factionFileName and 52 or nil
-    info.marginTop = nil
+    ns.Anchor:SetMargins(nil, info.factionFileName and 52 or nil, nil,
+                         not info.isDead and ns.profile.barPadding + 1 or nil)
 end
 
 function Unit:UpdateNameLine()
-    self.tip:GetFontStringLeft(1):SetText(self.info.name)
+    local info = self.info
+
+    local sb = self.sb:wipe()
+    sb:push(info.classIcon)
+    sb:push(info.name)
+
+    self.tip:GetFontStringLeft(1):SetText(sb:join(' '))
 end
 
 function Unit:UpdateGuildLine()
-    if not self.info.guild then
+    local info = self.info
+
+    local sb = self.sb:wipe()
+    sb:push(info.guild)
+    sb:push(info.guildRank)
+    sb:push(info.realm)
+
+    local text = sb:join(' ')
+    if not text or text == '' then
         return
     end
-    self.tip:GetFontStringLeft(self.info.lineGuild):SetText(self.info.guild)
+
+    if info.lineGuild then
+        self.tip:GetFontStringLeft(info.lineGuild):SetText(text)
+    else
+        self.tip:AppendLineFrontLeft(2, text)
+    end
 end
 
 function Unit:UpdateNpcTitleLine()
@@ -250,27 +258,18 @@ function Unit:UpdateBorder()
     local info = self.info
     local color = info.classColor or info.reactionColor
     if color then
-        self.tip.NineSlice:SetBorderColor(color.r, color.g, color.b)
+        self.tip:SetBackdropBorderColor(color.r, color.g, color.b)
     end
 end
 
 function Unit:UpdateStatusBar()
-    if self.info.isDead then
+    local info = self.info
+    if info.isDead then
         self.bar:Hide()
     else
         self.bar:Show()
         self:OnBarValueChanged(self.bar, self.bar:GetValue())
     end
-end
-
-function Unit:UpdateClassIcon()
-    local info = self.info
-    if not info.classFileName then
-        return
-    end
-
-    self.classIcon:SetTexCoord(unpack(CLASS_ICON_TCOORDS[info.classFileName]))
-    self.classIcon:Show()
 end
 
 function Unit:UpdateRaidIcon()
@@ -279,33 +278,16 @@ function Unit:UpdateRaidIcon()
         return
     end
 
-    self.raidIcon:SetTexture(format([[Interface\TargetingFrame\UI-RaidTargetingIcon_%d]], info.raidIndex))
+    self.raidIcon:SetTexture(ns.RAID_ICONS[info.raidIndex])
     self.raidIcon:Show()
 end
 
-local factionLogoTextures = {
-    ['Alliance'] = 'Interface\\Timer\\Alliance-Logo',
-    ['Horde'] = 'Interface\\Timer\\Horde-Logo',
-    ['Neutral'] = 'Interface\\Timer\\Panda-Logo',
-}
 function Unit:UpdateFactionIcon()
     local info = self.info
     if not info.factionFileName then
         return
     end
 
-    self.factionIcon:SetTexture(factionLogoTextures[info.factionFileName])
+    self.factionIcon:SetTexture(ns.FACTION_ICONS[info.factionFileName])
     self.factionIcon:Show()
-end
-
-function Unit:UpdateMargins()
-    local info = self.info
-    if not (info.marginBottom or info.marginTop or info.marginRight) then
-        self.tip.NineSlice:ClearAllPoints()
-        self.tip.NineSlice:SetAllPoints(true)
-    else
-        self.tip.NineSlice:ClearAllPoints()
-        self.tip.NineSlice:SetPoint('TOPLEFT', 0, info.marginTop or 0)
-        self.tip.NineSlice:SetPoint('BOTTOMRIGHT', info.marginRight or 0, -(info.marginBottom or 0))
-    end
 end
