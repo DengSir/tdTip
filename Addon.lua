@@ -26,9 +26,14 @@ function Addon:OnInitialize()
             ---@class DATABASE.profile.colors
             colors = {
                 guildColor = {r = 1, g = 0, b = 1},
+                guildRankColor = {r = 0.8, g = 0.53, b = 1},
                 friendColor = {r = 0, g = 1, b = 0.2},
                 enemyColor = {r = 1, g = 0, b = 0},
-                titleColor = {r = 0.6, g = 0.9, b = 0.9},
+                playerTitleColor = {r = 0.8, g = 1, b = 1},
+                realmColor = {r = 0, g = 0.93, b = 0.93},
+
+                npcTitleColor = {r = 0.6, g = 0.9, b = 0.9},
+                reactionColor = {r = 0.2, g = 1, b = 1},
             },
         },
     }

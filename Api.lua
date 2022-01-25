@@ -95,8 +95,11 @@ ns.CLASS_ICON_STRINGS = setmetatable({}, {
     end,
 })
 
-ns.POS_TYPE = {
-    System = 1,
-    Cursor = 2,
-    Custom = 3,
-}
+ns.REACTION_STRINGS = setmetatable({}, {
+    __index = function(t, k)
+        t[k] = format('<%s>', _G['FACTION_STANDING_LABEL' .. k])
+        return t[k]
+    end,
+})
+
+ns.POS_TYPE = {System = 1, Cursor = 2, Custom = 3}
