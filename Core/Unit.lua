@@ -9,37 +9,31 @@ local ns = select(2, ...)
 local strcolor = ns.strcolor
 
 local YOU = format('|cffff0000>> %s <<|r', 'You')
-local DEAD = strcolor(DEAD, ns.GREY_COLOR)
+local DEAD = strcolor(DEAD, RED_FONT_COLOR)
+local OFFLINE = strcolor(PLAYER_OFFLINE, ns.GREY_COLOR)
+local DND = strcolor(DND, ns.GREY_COLOR)
+local AFK = strcolor(AFK, ns.GREY_COLOR)
+
+local CLEAR_LINES = { --
+    [PVP] = true,
+    [PLAYER_OFFLINE] = true,
+    [FACTION_HORDE] = true,
+    [FACTION_ALLIANCE] = true,
+}
 
 ---@type LibTooltipExtra-1.0
 local LibTooltipExtra = LibStub('LibTooltipExtra-1.0')
 
----@class Unit: AceAddon-3.0, AceHook-3.0, AceTimer-3.0
-local Unit = ns.AddOn:NewModule('Unit', 'AceHook-3.0', 'AceTimer-3.0')
+---@class Unit: AceAddon-3.0, AceHook-3.0, AceTimer-3.0, AceEvent-3.0
+local Unit = ns.AddOn:NewModule('Unit', 'AceHook-3.0', 'AceTimer-3.0', 'AceEvent-3.0')
 
 function Unit:OnInitialize()
     ---@type UnitInfo
     self.info = {}
-    ---@class stringbuilder
-    self.sb = {}
+    ---@class lines
+    self.lines = {}
 
-    local sb = {}
-
-    ---@return stringbuilder
-    function self.sb:wipe()
-        wipe(sb)
-        return self
-    end
-
-    function self.sb:push(text)
-        if text then
-            sb[#sb + 1] = text
-        end
-    end
-
-    function self.sb:join(sep)
-        return table.concat(sb, sep)
-    end
+    self.sb = ns.stringbuilder
 
     self.PLAYER_FACTION = select(2, UnitFactionGroup('player'))
 
@@ -58,20 +52,27 @@ function Unit:OnInitialize()
 end
 
 function Unit:OnEnable()
-    local padding = ns.profile.barPadding
-    self.bar.lockColor = true
-    self.bar:SetHeight(ns.profile.barHeight)
-    self.bar:SetStatusBarTexture([[Interface\AddOns\tdTip\Media\StatusBar]])
-    self.bar:ClearAllPoints()
-    self.bar:SetPoint('BOTTOMLEFT', GameTooltip.NineSlice, 'BOTTOMLEFT', padding, padding)
-    self.bar:SetPoint('BOTTOMRIGHT', GameTooltip.NineSlice, 'BOTTOMRIGHT', -padding, padding)
+    self:OnSettingUpdate()
 
     self:HookScript(self.tip, 'OnTooltipSetUnit')
     self:HookScript(self.tip, 'OnTooltipCleared')
+
+    self:RegisterMessage('TDTIP_SETTING_UPDATE', 'OnSettingUpdate')
+
+    self.bar.lockColor = true
+    self.bar:SetStatusBarTexture([[Interface\AddOns\tdTip\Media\StatusBar]])
 end
 
 function Unit:OnDisable()
     self.bar.lockColor = nil
+end
+
+function Unit:OnSettingUpdate()
+    local padding = ns.profile.bar.padding
+    self.bar:SetHeight(ns.profile.bar.height)
+    self.bar:ClearAllPoints()
+    self.bar:SetPoint('BOTTOMLEFT', GameTooltip.NineSlice, 'BOTTOMLEFT', padding, padding)
+    self.bar:SetPoint('BOTTOMRIGHT', GameTooltip.NineSlice, 'BOTTOMRIGHT', -padding, padding)
 end
 
 function Unit:OnTooltipCleared()
@@ -80,8 +81,6 @@ function Unit:OnTooltipCleared()
     self.raidIcon:Hide()
     self.factionIcon:Hide()
     self:CancelAllTimers()
-
-    print('Clear')
 end
 
 function Unit:OnBarValueChanged()
@@ -93,13 +92,10 @@ function Unit:OnBarValueChanged()
 end
 
 function Unit:OnTooltipSetUnit()
-    print(1, self.tip:GetUnit())
     local _, unit = self.tip:GetUnit()
     if not unit then
         return
     end
-
-    print(unit)
 
     self:UpdateInfo(unit)
     self:UpdateNameLine()
@@ -117,6 +113,8 @@ end
 function Unit:UpdateInfo(unit)
     ---@class UnitInfo
     local info = wipe(self.info)
+    ---@class lines
+    local lines = wipe(self.lines)
 
     info.unit = unit
     info.isPlayer = UnitIsPlayer(unit)
@@ -129,7 +127,11 @@ function Unit:UpdateInfo(unit)
     info.raidIndex = GetRaidTargetIndex(unit)
 
     if info.isPlayer then
-        info.isFriend = info.faction == self.PLAYER_FACTION
+        if UnitInBattleground('player') then
+            info.isFriend = UnitInRaid(unit) or nil
+        else
+            info.isFriend = info.faction == self.PLAYER_FACTION
+        end
         info.level = UnitLevel(unit)
         info.race, info.raceFileName = UnitRace(unit)
         info.guild, info.guildRank = GetGuildInfo(unit)
@@ -144,19 +146,18 @@ function Unit:UpdateInfo(unit)
         info.reaction = UnitReaction(unit, 'player')
         info.isTapDenied = UnitIsTapDenied(unit)
         info.reactionColor = FACTION_BAR_COLORS[info.reaction]
-
     end
 
     for i = 2, self.tip:NumLines() do
         local line = self.tip:GetFontStringLeft(i)
         local text = line:GetText()
         if text then
-            if info.isPlayer and info.guild and not info.lineGuild and text:find(info.guild, nil, true) then
-                info.lineGuild = i
-            elseif not info.lineLevel and text:find(LEVEL, nil, true) then
-                info.lineLevel = i
-            elseif not info.linePvp and text:find(PVP, nil, true) then
-                info.linePvp = i
+            if info.isPlayer and info.guild and not lines.guild and text:find(info.guild, nil, true) then
+                lines.guild = i
+            elseif not lines.level and text:find(LEVEL, nil, true) then
+                lines.level = i
+            elseif CLEAR_LINES[text] then
+                tinsert(self.lines, i)
                 line:SetText()
             end
         end
@@ -169,6 +170,10 @@ function Unit:UpdateInfo(unit)
         else
             info.level = strcolor(info.level, GetQuestDifficultyColor(info.level))
         end
+    end
+
+    if info.isDead then
+        info.dead = DEAD
     end
 
     if info.isPlayer then
@@ -197,6 +202,18 @@ function Unit:UpdateInfo(unit)
         if info.realm then
             info.realm = strcolor(info.realm, ns.colors.realmColor)
         end
+
+        if ns.profile.showOffline and not UnitIsConnected(unit) then
+            info.offline = OFFLINE
+        end
+
+        if ns.profile.showAFK and UnitIsAFK(unit) then
+            info.afk = AFK
+        end
+
+        if ns.profile.showDND and UnitIsDND(unit) then
+            info.dnd = DND
+        end
     else
         info.type = strcolor(info.type, info.reactionColor)
 
@@ -210,26 +227,26 @@ function Unit:UpdateInfo(unit)
             info.reactionName = strcolor(ns.REACTION_STRINGS[info.reaction], ns.colors.reactionColor)
         end
 
-        if info.lineLevel > 2 then
+        if lines.level > 2 then
             local title = self.tip:GetFontStringLeft(2):GetText()
 
             info.title = strcolor(format('<%s>', title), ns.colors.npcTitleColor)
         end
     end
 
-    if info.linePvp then
-        info.lineTarget = info.linePvp
-        info.linePvp = nil
-    else
-        self.tip:AddLine(' ')
-        info.lineTarget = self.tip:NumLines()
-        self.tip:GetFontStringLeft(info.lineTarget):SetText()
-    end
-
-    self.tip:GetFontStringLeft(info.lineTarget):SetTextColor(NORMAL_FONT_COLOR:GetRGB())
+    lines.target = self:GetEmptyLine()
 
     ns.Anchor:SetMargins(nil, info.factionFileName and 52 or nil, nil,
-                         not info.isDead and ns.profile.barPadding + 1 or nil)
+                         not info.isDead and ns.profile.bar.padding + ns.profile.bar.height - 5 or nil)
+end
+
+function Unit:GetEmptyLine()
+    local line = tremove(self.lines)
+    if not line then
+        self.tip:AddLine(' ')
+        line = self.tip:NumLines()
+    end
+    return line
 end
 
 function Unit:UpdateNameLine()
@@ -255,8 +272,9 @@ function Unit:UpdateGuildLine()
         return
     end
 
-    if info.lineGuild then
-        self.tip:GetFontStringLeft(info.lineGuild):SetText(text)
+    local lineGuild = self.lines.guild
+    if lineGuild then
+        self.tip:GetFontStringLeft(lineGuild):SetText(text)
     else
         self.tip:AppendLineFrontLeft(2, text)
     end
@@ -280,9 +298,12 @@ function Unit:UpdateLevelLine()
     sb:push(info.type)
     sb:push(info.classification)
     sb:push(info.reactionName)
-    sb:push(info.isDead and DEAD)
+    sb:push(info.dead)
+    sb:push(info.offline)
+    sb:push(info.afk)
+    sb:push(info.dnd)
 
-    self.tip:GetFontStringLeft(info.lineLevel):SetText(sb:join(' '))
+    self.tip:GetFontStringLeft(self.lines.level):SetText(sb:join(' '))
 end
 
 function Unit:UpdateBorder()
@@ -329,7 +350,7 @@ function Unit:UpdateTarget()
         return
     end
 
-    self.tip:GetFontStringLeft(self.info.lineTarget):SetText(self:GetTargetText())
+    self.tip:GetFontStringLeft(self.lines.target):SetText(self:GetTargetText())
     self.tip:Show()
 end
 
@@ -357,7 +378,7 @@ function Unit:GetTargetText()
     if UnitIsUnit(unit, 'player') then
         unitName = YOU
     else
-        unitName = strcolor(UnitName(unit), UnitColor(unit))
+        unitName = strcolor(format('[%s]', UnitName(unit)), UnitColor(unit))
     end
-    return unitName and format('%s: [[ %s ]]', TARGET, unitName) or nil
+    return unitName and format('|cffffd100%s: %s|r', TARGET, unitName) or nil
 end

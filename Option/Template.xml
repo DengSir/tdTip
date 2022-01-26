@@ -1,0 +1,47 @@
+<Ui xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+..\FrameXML\UI.xsd">
+    <CheckButton name="tdTipCustomPositionAnchorTemplate" parentArray="buttons" virtual="true">
+        <Size x="20" y="20" />
+        <NormalTexture>
+            <Color r="1" g="1" b="1" />
+        </NormalTexture>
+        <CheckedTexture>
+            <Color r="1" g="0" b="0" />
+        </CheckedTexture>
+        <Scripts>
+            <OnClick>
+                self:GetParent():UpdateAnchor((self:GetPoint()))
+            </OnClick>
+        </Scripts>
+    </CheckButton>
+    <Frame name="tdTipCustomPositionFrameTemplate" enableMouse="true" movable="true" clampedToScreen="true" frameStrata="FULLSCREEN_DIALOG" inherits="TooltipBackdropTemplate" virtual="true">
+        <Size x="200" y="100" />
+        <Frames>
+            <CheckButton parentKey="TopLeft" inherits="tdTipCustomPositionAnchorTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="5" y="-5" />
+                </Anchors>
+            </CheckButton>
+            <CheckButton parentKey="TopRight" inherits="tdTipCustomPositionAnchorTemplate">
+                <Anchors>
+                    <Anchor point="TOPRIGHT" x="-5" y="-5" />
+                </Anchors>
+            </CheckButton>
+            <CheckButton parentKey="BottomLeft" inherits="tdTipCustomPositionAnchorTemplate">
+                <Anchors>
+                    <Anchor point="BOTTOMLEFT" x="5" y="5" />
+                </Anchors>
+            </CheckButton>
+            <CheckButton parentKey="BottomRight" inherits="tdTipCustomPositionAnchorTemplate">
+                <Anchors>
+                    <Anchor point="BOTTOMRIGHT" x="-5" y="5" />
+                </Anchors>
+            </CheckButton>
+            <Button parentKey="Close" inherits="UIPanelCloseButton">
+                <Anchors>
+                    <Anchor point="CENTER" />
+                </Anchors>
+            </Button>
+        </Frames>
+    </Frame>
+</Ui>

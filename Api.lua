@@ -35,9 +35,9 @@ local function colorHex(color)
     end
     return format('ff%02x%02x%02x', color.r * 255, color.g * 255, color.b * 255)
 end
-ns.colorHex = memorize(colorHex, 'k')
+ns.colorHex = colorHex
 
-function ns.strcolor(text, color)
+local function strcolor(text, color)
     if not text then
         return
     end
@@ -46,12 +46,9 @@ function ns.strcolor(text, color)
     end
     return WrapTextInColorCode(text, colorHex(color))
 end
+ns.strcolor = strcolor
 
 ns.GREY_COLOR = colorHex({r = 0.5, g = 0.5, b = 0.5})
-ns.FRIEND_COLOR = colorHex({r = 0.00, g = 1.00, b = 0.20})
-ns.ENEMY_COLOR = colorHex({r = 1.00, g = 0.20, b = 0.00})
-ns.GUILD_COLOR = colorHex({r = 1.00, g = 0.00, b = 1.00})
-ns.NPC_TITLE_COLOR = 'ff99e8e8'
 
 local L = setmetatable({}, {
     __index = function(t, k)
@@ -59,11 +56,13 @@ local L = setmetatable({}, {
     end,
 })
 
+ns.L = L
+
 ns.CLASSIFICATIONS = {
-    elite = format('|cffffff33%s|r', ELITE),
-    worldboss = format('|cffff0000%s|r', BOSS),
-    rare = format('|cffff66ff%s|r', L.Rare),
-    rareelite = format('|cffffaaff%s%s|r', L.Rare, ELITE),
+    elite = strcolor(ELITE, 'ffffff33'),
+    worldboss = strcolor(BOSS, 'ffff0000'),
+    rare = strcolor(L.Rare, 'ffff66ff'),
+    rareelite = strcolor(L.Rare .. ELITE, 'ffffaaff'),
 }
 
 ns.RAID_ICONS = setmetatable({}, {
@@ -103,3 +102,27 @@ ns.REACTION_STRINGS = setmetatable({}, {
 })
 
 ns.POS_TYPE = {System = 1, Cursor = 2, Custom = 3}
+
+do
+    local stringbuilder = {}
+    local sb = {}
+    function stringbuilder:wipe()
+        wipe(sb)
+        return self
+    end
+
+    function stringbuilder:push(text)
+        if text then
+            sb[#sb + 1] = text
+        end
+    end
+
+    function stringbuilder:join(sep)
+        if #sb == 0 then
+            return
+        end
+        return table.concat(sb, sep)
+    end
+
+    ns.stringbuilder = stringbuilder
+end

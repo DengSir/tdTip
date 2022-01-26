@@ -4,6 +4,11 @@
     <!-- <Include file="Localization\Localization.xml" /> -->
     <Script file="Api.lua" />
     <Script file="Addon.lua" />
-    <Script file="Core/Unit.lua" />
-    <Script file="Core/Anchor.lua" />
+
+    <Script file="Core\Unit.lua" />
+    <Script file="Core\Anchor.lua" />
+    <Script file="Core\Skin.lua" />
+
+    <Include file="Option\Template.xml" />
+    <Script file="Option\Option.lua" />
 </Ui>

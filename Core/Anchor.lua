@@ -6,8 +6,8 @@
 ---@class ns
 local ns = select(2, ...)
 
----@class Anchor: AceAddon-3.0, AceHook-3.0
-local Anchor = ns.AddOn:NewModule('Anchor', 'AceHook-3.0')
+---@class Anchor: AceAddon-3.0, AceHook-3.0, AceEvent-3.0
+local Anchor = ns.AddOn:NewModule('Anchor', 'AceHook-3.0', 'AceEvent-3.0')
 ns.Anchor = Anchor
 
 function Anchor:OnInitialize()
@@ -23,28 +23,26 @@ function Anchor:OnInitialize()
         if f.timr > 0 then
             return
         end
-        f.timr = 0.05
+        f.timr = 0.016
         self:UpdateAnchor()
     end)
-
-    if ns.AddOn.db.profile.posType == ns.POS_TYPE.Cursor then
-        self.cursorUpdater:Show()
-    end
-
-    self.mask = self.tip:CreateTexture(nil, 'OVERLAY')
-    self.mask:SetTexture([[Interface\Tooltips\UI-Tooltip-Background]])
-    self.mask:SetPoint('TOPLEFT', 3, -3)
-    self.mask:SetPoint('BOTTOMRIGHT', self.tip.NineSlice, 'TOPRIGHT', -3, -32)
-    self.mask:SetBlendMode('ADD')
-    self.mask:SetGradientAlpha('VERTICAL', 0, 0, 0, 0, 0.9, 0.9, 0.9, 0.4)
 end
 
 function Anchor:OnEnable()
+    self:OnSettingUpdate()
+
     self:HookScript(self.tip, 'OnTooltipCleared')
     self:SecureHook('GameTooltip_SetDefaultAnchor', 'OnTooltipSetDefaultAnchor')
+
+    self:RegisterMessage('TDTIP_SETTING_UPDATE', 'OnSettingUpdate')
+end
+
+function Anchor:OnSettingUpdate()
+    self.cursorUpdater:SetShown(ns.profile.pos.type == ns.POS_TYPE.Cursor)
 end
 
 function Anchor:OnTooltipCleared()
+    wipe(self.margins)
     self.tip.tip.default = nil
     self.tip.NineSlice:ClearAllPoints()
     self.tip.NineSlice:SetAllPoints(self.tip)
@@ -85,21 +83,18 @@ function Anchor:UpdateAnchor()
         return
     end
 
-    -- local owner = self.tip:GetOwner()
-    -- if not owner or owner == UIParent or owner == WorldFrame then
-        local posType = ns.AddOn.db.profile.posType
-        local pos
-        if posType == ns.POS_TYPE.System then
-            pos = self:GetSystemAnchor()
-        elseif posType == ns.POS_TYPE.Custom then
-            pos = self:GetCustomAnchor()
-        elseif posType == ns.POS_TYPE.Cursor then
-            pos = self:GetCursorAnchor()
-        end
+    local posType = ns.profile.pos.type
+    local pos
+    if posType == ns.POS_TYPE.System then
+        pos = self:GetSystemAnchor()
+    elseif posType == ns.POS_TYPE.Custom then
+        pos = self:GetCustomAnchor()
+    elseif posType == ns.POS_TYPE.Cursor then
+        pos = self:GetCursorAnchor()
+    end
 
-        self.tip:ClearAllPoints()
-        self.tip:SetPoint(pos.point, UIParent, pos.point, pos.x, pos.y)
-    -- end
+    self.tip:ClearAllPoints()
+    self.tip:SetPoint(pos.point, UIParent, pos.point, pos.x, pos.y)
 end
 
 function Anchor:GetSystemAnchor()
@@ -107,7 +102,7 @@ function Anchor:GetSystemAnchor()
 end
 
 function Anchor:GetCustomAnchor()
-    local pos = ns.AddOn.db.profile.posCustom
+    local pos = ns.profile.pos.custom
     return self:GetAnchor(pos.point, pos.x, pos.y)
 end
 
@@ -138,6 +133,5 @@ function Anchor:GetAnchor(point, x, y)
     anchor.point = point
     anchor.x = x
     anchor.y = y
-
     return anchor
 end

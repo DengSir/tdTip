@@ -6,8 +6,8 @@
 ---@class ns
 local ns = select(2, ...)
 
----@class Addon: AceAddon-3.0
-local Addon = LibStub('AceAddon-3.0'):NewAddon('tdTip')
+---@class Addon: AceAddon-3.0, AceEvent-3.0
+local Addon = LibStub('AceAddon-3.0'):NewAddon('tdTip', 'AceEvent-3.0')
 ns.AddOn = Addon
 
 function Addon:OnInitialize()
@@ -17,11 +17,13 @@ function Addon:OnInitialize()
         profile = { --
             showPvpName = true,
             showGuildRank = true,
+            showOffline = true,
+            showAFK = true,
+            showDND = true,
 
-            posType = 3,
-            posCustom = {point = 'BOTTOMRIGHT', x = -300, y = 200},
-            barHeight = 4,
-            barPadding = 9,
+            pos = {type = ns.POS_TYPE.System, custom = {point = 'BOTTOMRIGHT', x = -300, y = 200}},
+
+            bar = {height = 4, padding = 9},
 
             ---@class DATABASE.profile.colors
             colors = {
@@ -40,10 +42,23 @@ function Addon:OnInitialize()
     ---@class db: AceDB-3.0, DATABASE
     self.db = LibStub('AceDB-3.0'):New('TDDB_TIP', db)
 
+    local function UpdateProfile()
+        return self:OnProfileUpdate()
+    end
+
+    self.db:RegisterCallback('OnProfileChanged', UpdateProfile)
+    self.db:RegisterCallback('OnProfileReset', UpdateProfile)
+
     ---@type DATABASE.profile.colors
     ns.colors = {}
 
+    self:LoadOptionFrame()
+end
+
+function Addon:OnEnable()
     self:OnProfileUpdate()
+
+    self:RegisterMessage('TDTIP_SETTING_UPDATE', 'OnProfileUpdate')
 end
 
 function Addon:OnProfileUpdate()
