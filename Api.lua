@@ -129,6 +129,10 @@ ns.DATABASE = {
         showAFK = true,
         showDND = true,
         showFactionIcon = true,
+        showClassIcon = true,
+
+        classIconSize = 24,
+        raidIconSize = 32,
 
         pos = {type = ns.POS_TYPE.System, custom = ns.DEFAULT_CUSTOM_POSITION},
 

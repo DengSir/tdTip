@@ -118,9 +118,13 @@ function Addon:LoadOptionFrame()
                 showPvpName = toggle(L['Show player title']),
                 showGuildRank = toggle(L['Show guild rank']),
                 showFactionIcon = toggle(L['Show faction icon']),
+                showClassIcon = toggle(L['Show class icon']),
                 showOffline = toggle(L['Show offline']),
                 showAFK = toggle(L['Show AFK']),
                 showDND = toggle(L['Show DND']),
+
+                classIconSize = range(L['Class icon size'], 10, 32, 1),
+                raidIconSize = range(L['Raid icon size'], 10, 128, 1),
             },
 
             pos = inline(L['Position']) {

@@ -49,6 +49,8 @@ function Addon:UpdateColors()
     for k, v in pairs(ns.profile.colors) do
         C[k] = ns.colorHex(v)
     end
+
+    wipe(S.REACTIONS)
 end
 
 function Addon:UpdateFormats()
@@ -57,8 +59,4 @@ function Addon:UpdateFormats()
             return ns.colorHex(ns.profile.colors[x])
         end)
     end
-
-    wipe(S.REACTIONS)
-
-    dump(F)
 end

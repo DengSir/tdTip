@@ -110,12 +110,6 @@ function Anchor:GetCustomAnchor()
     return self:GetAnchor(pos.point, pos.x, pos.y)
 end
 
-function Anchor:GetCursorAnchor()
-    local x, y = GetCursorPosition()
-    local scale = self.tip:GetEffectiveScale()
-    return self:GetAnchor('BOTTOMLEFT', x / scale + 20, y / scale)
-end
-
 local anchor = {}
 function Anchor:GetAnchor(point, x, y)
     local margins = self.margins

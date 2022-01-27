@@ -13,7 +13,7 @@ local L = ns.L
 
 local Formats = { --
     Guild = '|c{guildColor}<%s>|r',
-    GuildRank = '|cffffffff-|r |c{guildRankColor}%s|r',
+    GuildRank = '|c{guildRankColor}%s|r',
     NpcTitle = '|c{npcTitleColor}<%s>|r',
     Realm = '|c{realmColor}%s|r',
     Reaction = '|c{reactionColor}<%s>|r',

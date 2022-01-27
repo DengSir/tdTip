@@ -74,6 +74,9 @@ function Unit:OnSettingUpdate()
     self.bar:ClearAllPoints()
     self.bar:SetPoint('BOTTOMLEFT', GameTooltip.NineSlice, 'BOTTOMLEFT', padding, padding)
     self.bar:SetPoint('BOTTOMRIGHT', GameTooltip.NineSlice, 'BOTTOMRIGHT', -padding, padding)
+
+    local size = ns.profile.raidIconSize
+    self.raidIcon:SetSize(size, size)
 end
 
 function Unit:OnTooltipCleared()
@@ -85,7 +88,8 @@ function Unit:OnTooltipCleared()
 end
 
 function Unit:OnBarValueChanged()
-    local color = self.info.color
+    local info = self.info
+    local color = info.classColor or info.reactionColor
     if color then
         self.bar:SetStatusBarColor(color.r, color.g, color.b)
     end
@@ -171,21 +175,24 @@ function Unit:UpdateInfo(unit)
         else
             info.level = strcolor(info.level, GetQuestDifficultyColor(info.level))
         end
-
-        info.color = ns.UnitColor(info.isPlayer, info.classFileName, info.reaction)
     end
 
     if info.isPlayer then
-        info.class = strcolor(info.class, info.color)
+        info.classColor = RAID_CLASS_COLORS[info.classFileName]
+        info.class = strcolor(info.class, info.classColor)
         info.race = strcolor(info.race, info.isFriend and C.friendColor or C.enemyColor)
-        info.classIcon = I.Class[info.classFileName]:format(18, 18)
+
+        if ns.profile.showClassIcon then
+            local size = ns.profile.classIconSize
+            info.classIcon = I.Class[info.classFileName]:format(size, size)
+        end
 
         local pvpName = ns.profile.showPvpName and UnitPVPName(unit)
         if pvpName then
-            info.name = pvpName:gsub(info.name, strcolor(info.name, info.color))
+            info.name = pvpName:gsub(info.name, strcolor(info.name, info.classColor))
             info.name = strcolor(info.name, C.playerTitleColor)
         else
-            info.name = strcolor(info.name, info.color)
+            info.name = strcolor(info.name, info.classColor)
         end
 
         if info.guild then
@@ -209,12 +216,13 @@ function Unit:UpdateInfo(unit)
             info.dnd = S.DND
         end
     else
-        info.type = strcolor(info.type, info.color)
+        info.reactionColor = FACTION_BAR_COLORS[info.reaction]
+        info.type = strcolor(info.type, info.reactionColor)
 
         if info.isTapDenied then
             info.name = strcolor(info.name, ns.GRAY_COLOR)
         else
-            info.name = strcolor(info.name, info.color)
+            info.name = strcolor(info.name, info.reactionColor)
         end
 
         if info.reaction and info.reaction >= 6 then
@@ -299,7 +307,14 @@ function Unit:UpdateLevelLine()
 end
 
 function Unit:UpdateBorder()
-    local color = self.info.color
+    local info = self.info
+    local color
+    if info.isTapDenied then
+        color = GRAY_FONT_COLOR
+    else
+        color = info.classColor or info.reactionColor
+    end
+
     if color then
         self.tip:SetBackdropBorderColor(color.r, color.g, color.b)
     end
