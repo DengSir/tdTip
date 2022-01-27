@@ -3,12 +3,15 @@
     <Include file="Libs\Libs.xml" />
     <!-- <Include file="Localization\Localization.xml" /> -->
     <Script file="Api.lua" />
+    <Script file="Data.lua" />
     <Script file="Addon.lua" />
 
     <Script file="Core\Unit.lua" />
     <Script file="Core\Anchor.lua" />
     <Script file="Core\Skin.lua" />
+    <Script file="Core\Spell.lua" />
 
     <Include file="Option\Template.xml" />
     <Script file="Option\Option.lua" />
+    <Script file="Option\CustomPosition.lua" />
 </Ui>

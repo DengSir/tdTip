@@ -15,17 +15,6 @@ function Anchor:OnInitialize()
     self.margins = {}
 
     self.tip = LibStub('LibTooltipExtra-1.0'):New(GameTooltip)
-
-    self.cursorUpdater = CreateFrame('Frame', nil, self.tip)
-    self.cursorUpdater:Hide()
-    self.cursorUpdater:SetScript('OnUpdate', function(f, elapsed)
-        f.timr = (f.timr or 0) - elapsed
-        if f.timr > 0 then
-            return
-        end
-        f.timr = 0.016
-        self:UpdateAnchor()
-    end)
 end
 
 function Anchor:OnEnable()
@@ -38,7 +27,7 @@ function Anchor:OnEnable()
 end
 
 function Anchor:OnSettingUpdate()
-    self.cursorUpdater:SetShown(ns.profile.pos.type == ns.POS_TYPE.Cursor)
+    -- self.cursorUpdater:SetShown(ns.profile.pos.type == ns.POS_TYPE.Cursor)
 end
 
 function Anchor:OnTooltipCleared()
@@ -84,17 +73,32 @@ function Anchor:UpdateAnchor()
     end
 
     local posType = ns.profile.pos.type
-    local pos
-    if posType == ns.POS_TYPE.System then
-        pos = self:GetSystemAnchor()
-    elseif posType == ns.POS_TYPE.Custom then
-        pos = self:GetCustomAnchor()
-    elseif posType == ns.POS_TYPE.Cursor then
-        pos = self:GetCursorAnchor()
-    end
+    if posType == ns.POS_TYPE.Cursor then
+        local owner = self.tip:GetOwner()
+        if not owner or owner == UIParent or owner == WorldFrame then
+            if self.tip:GetUnit() then
+                self.tip:SetAnchorType('ANCHOR_CURSOR_RIGHT', 30, -20)
+            else
+                self.tip:SetAnchorType('ANCHOR_CURSOR')
+            end
+        else
+            if owner:GetRight() < GetScreenWidth() / 2 then
+                self.tip:SetAnchorType('ANCHOR_RIGHT')
+            else
+                self.tip:SetAnchorType('ANCHOR_LEFT')
+            end
+        end
+    else
+        local pos
+        if posType == ns.POS_TYPE.System then
+            pos = self:GetSystemAnchor()
+        elseif posType == ns.POS_TYPE.Custom then
+            pos = self:GetCustomAnchor()
+        end
 
-    self.tip:ClearAllPoints()
-    self.tip:SetPoint(pos.point, UIParent, pos.point, pos.x, pos.y)
+        self.tip:ClearAllPoints()
+        self.tip:SetPoint(pos.point, UIParent, pos.point, pos.x, pos.y)
+    end
 end
 
 function Anchor:GetSystemAnchor()

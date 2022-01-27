@@ -8,11 +8,12 @@ local ns = select(2, ...)
 
 local strcolor = ns.strcolor
 
-local YOU = format('|cffff0000>> %s <<|r', 'You')
-local DEAD = strcolor(DEAD, RED_FONT_COLOR)
-local OFFLINE = strcolor(PLAYER_OFFLINE, ns.GREY_COLOR)
-local DND = strcolor(DND, ns.GREY_COLOR)
-local AFK = strcolor(AFK, ns.GREY_COLOR)
+local L = ns.L
+
+local S = ns.Strings
+local F = ns.Formats
+local I = ns.Icons
+local C = ns.Colors
 
 local CLEAR_LINES = { --
     [PVP] = true,
@@ -84,8 +85,7 @@ function Unit:OnTooltipCleared()
 end
 
 function Unit:OnBarValueChanged()
-    local info = self.info
-    local color = info.classColor or info.reactionColor
+    local color = self.info.color
     if color then
         self.bar:SetStatusBarColor(color.r, color.g, color.b)
     end
@@ -106,7 +106,7 @@ function Unit:OnTooltipSetUnit()
     self:UpdateStatusBar()
     self:UpdateFactionIcon()
     self:UpdateRaidIcon()
-    self:UpdateTarget()
+    self:UpdateTarget(true)
     self:ScheduleRepeatingTimer('UpdateTarget', 0.1)
 end
 
@@ -136,16 +136,14 @@ function Unit:UpdateInfo(unit)
         info.race, info.raceFileName = UnitRace(unit)
         info.guild, info.guildRank = GetGuildInfo(unit)
         info.class, info.classFileName = UnitClass(unit)
-        info.classColor = RAID_CLASS_COLORS[info.classFileName]
     elseif info.isBattlePet then
         info.level = UnitBattlePetLevel(unit)
     else
         info.level = UnitLevel(unit)
         info.type = UnitPlayerControlled(unit) and UnitCreatureFamily(unit) or UnitCreatureType(unit)
-        info.classification = ns.CLASSIFICATIONS[UnitClassification(unit)]
+        info.classification = S.CLASSIFICATIONS[UnitClassification(unit)]
         info.reaction = UnitReaction(unit, 'player')
         info.isTapDenied = UnitIsTapDenied(unit)
-        info.reactionColor = FACTION_BAR_COLORS[info.reaction]
     end
 
     for i = 2, self.tip:NumLines() do
@@ -163,81 +161,75 @@ function Unit:UpdateInfo(unit)
         end
     end
 
-    if info.isBattlePet then
-    else
+    if info.isDead then
+        info.dead = S.DEAD
+    end
+
+    if not info.isBattlePet then
         if info.level <= 0 then
             info.level = '|cffff0000??|r'
         else
             info.level = strcolor(info.level, GetQuestDifficultyColor(info.level))
         end
-    end
 
-    if info.isDead then
-        info.dead = DEAD
+        info.color = ns.UnitColor(info.isPlayer, info.classFileName, info.reaction)
     end
 
     if info.isPlayer then
-        -- if not info.realm then
-        --     info.realm = GetRealmName()
-        -- end
-
-        info.class = strcolor(info.class, info.classColor)
-        info.race = strcolor(info.race, info.isFriend and ns.colors.friendColor or ns.colors.enemyColor)
-        info.classIcon = ns.CLASS_ICON_STRINGS[info.classFileName]:format(18, 18)
+        info.class = strcolor(info.class, info.color)
+        info.race = strcolor(info.race, info.isFriend and C.friendColor or C.enemyColor)
+        info.classIcon = I.Class[info.classFileName]:format(18, 18)
 
         local pvpName = ns.profile.showPvpName and UnitPVPName(unit)
         if pvpName then
-            info.name = pvpName:gsub(info.name, strcolor(info.name, info.classColor))
-            info.name = strcolor(info.name, ns.colors.playerTitleColor)
+            info.name = pvpName:gsub(info.name, strcolor(info.name, info.color))
+            info.name = strcolor(info.name, C.playerTitleColor)
         else
-            info.name = strcolor(info.name, info.classColor)
+            info.name = strcolor(info.name, info.color)
         end
 
         if info.guild then
-            info.guild = strcolor(format('<%s>', info.guild), ns.colors.guildColor)
-            info.guildRank = ns.profile.showGuildRank and
-                                 strcolor(format('(%s)', info.guildRank), ns.colors.guildRankColor) or nil
+            info.guild = F.Guild:format(info.guild)
+            info.guildRank = ns.profile.showGuildRank and F.GuildRank:format(info.guildRank) or nil
         end
 
         if info.realm then
-            info.realm = strcolor(info.realm, ns.colors.realmColor)
+            info.realm = F.Realm:format(info.realm)
         end
 
         if ns.profile.showOffline and not UnitIsConnected(unit) then
-            info.offline = OFFLINE
+            info.offline = S.OFFLINE
         end
 
         if ns.profile.showAFK and UnitIsAFK(unit) then
-            info.afk = AFK
+            info.afk = S.AFK
         end
 
         if ns.profile.showDND and UnitIsDND(unit) then
-            info.dnd = DND
+            info.dnd = S.DND
         end
     else
-        info.type = strcolor(info.type, info.reactionColor)
+        info.type = strcolor(info.type, info.color)
 
         if info.isTapDenied then
-            info.name = strcolor(info.name, ns.GREY_COLOR)
+            info.name = strcolor(info.name, ns.GRAY_COLOR)
         else
-            info.name = strcolor(info.name, info.reactionColor)
+            info.name = strcolor(info.name, info.color)
         end
 
         if info.reaction and info.reaction >= 6 then
-            info.reactionName = strcolor(ns.REACTION_STRINGS[info.reaction], ns.colors.reactionColor)
+            info.reactionName = S.REACTIONS[info.reaction]
         end
 
         if lines.level > 2 then
-            local title = self.tip:GetFontStringLeft(2):GetText()
-
-            info.title = strcolor(format('<%s>', title), ns.colors.npcTitleColor)
+            info.title = F.NpcTitle:format(self.tip:GetFontStringLeft(2):GetText())
         end
     end
 
-    lines.target = self:GetEmptyLine()
+    local right = ns.profile.showFactionIcon and info.factionFileName and 52 or nil
+    local bottom = not info.isDead and ns.profile.bar.padding + ns.profile.bar.height - 5 or nil
 
-    ns.Anchor:SetMargins(nil, info.factionFileName and 52 or nil, nil,
-                         not info.isDead and ns.profile.bar.padding + ns.profile.bar.height - 5 or nil)
+    ns.Anchor:SetMargins(nil, right, nil, bottom)
 end
 
 function Unit:GetEmptyLine()
@@ -307,8 +299,7 @@ function Unit:UpdateLevelLine()
 end
 
 function Unit:UpdateBorder()
-    local info = self.info
-    local color = info.classColor or info.reactionColor
+    local color = self.info.color
     if color then
         self.tip:SetBackdropBorderColor(color.r, color.g, color.b)
     end
@@ -330,17 +321,20 @@ function Unit:UpdateRaidIcon()
         return
     end
 
-    self.raidIcon:SetTexture(ns.RAID_ICONS[info.raidIndex])
+    self.raidIcon:SetTexture(I.Raid[info.raidIndex])
     self.raidIcon:Show()
 end
 
 function Unit:UpdateFactionIcon()
+    if not ns.profile.showFactionIcon then
+        return
+    end
     local info = self.info
     if not info.factionFileName then
         return
     end
 
-    self.factionIcon:SetTexture(ns.FACTION_ICONS[info.factionFileName])
+    self.factionIcon:SetTexture(I.Faction[info.factionFileName])
     self.factionIcon:Show()
 end
 
@@ -350,23 +344,15 @@ function Unit:UpdateTarget()
         return
     end
 
-    self.tip:GetFontStringLeft(self.lines.target):SetText(self:GetTargetText())
-    self.tip:Show()
-end
-
-local function UnitColor(unit)
-    if UnitIsPlayer(unit) then
-        local _, classKey = UnitClass(unit)
-        if classKey then
-            return RAID_CLASS_COLORS[classKey]
-        end
-    else
-        local reaction = UnitReaction(unit, 'player')
-        if reaction then
-            return FACTION_BAR_COLORS[reaction]
-        end
+    local lines = self.lines
+    local target = self:GetTargetText()
+    if target then
+        lines.target = lines.target or self:GetEmptyLine()
+        self.tip:GetFontStringLeft(lines.target):SetText(target)
+    elseif lines.target then
+        self.tip:GetFontStringLeft(lines.target):SetText()
     end
-    return HIGHLIGHT_FONT_COLOR
+    self.tip:Show()
 end
 
 function Unit:GetTargetText()
@@ -376,9 +362,9 @@ function Unit:GetTargetText()
     end
     local unitName
     if UnitIsUnit(unit, 'player') then
-        unitName = YOU
+        unitName = S.YOU
     else
-        unitName = strcolor(format('[%s]', UnitName(unit)), UnitColor(unit))
+        unitName = strcolor(format('[%s]', UnitName(unit)), ns.UnitColor(unit))
     end
-    return unitName and format('|cffffd100%s: %s|r', TARGET, unitName) or nil
+    return unitName and S.TARGET:format(unitName) or nil
 end

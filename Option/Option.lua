@@ -11,6 +11,8 @@ local L = ns.L
 ---@class Addon
 local Addon = ns.AddOn
 
+local customPosition
+
 function Addon:LoadOptionFrame()
     local order = 0
     local function orderGen()
@@ -43,6 +45,7 @@ function Addon:LoadOptionFrame()
                 end
             else
                 if paths.type == 'color' then
+                    d[v] = {}
                     d = d[v]
                     d.r, d.g, d.b, d.a = ...
                 else
@@ -114,6 +117,10 @@ function Addon:LoadOptionFrame()
             general = inline(GENERAL) {
                 showPvpName = toggle(L['Show player title']),
                 showGuildRank = toggle(L['Show guild rank']),
+                showFactionIcon = toggle(L['Show faction icon']),
+                showOffline = toggle(L['Show offline']),
+                showAFK = toggle(L['Show AFK']),
+                showDND = toggle(L['Show DND']),
             },
 
             pos = inline(L['Position']) {
@@ -127,15 +134,14 @@ function Addon:LoadOptionFrame()
                     name = L['Custom position'],
                     order = orderGen(),
                     func = function()
-                        self:ToggleCustonPositionFrame()
+                        if not customPosition then
+                            customPosition = ns.CustomPosition:Bind(
+                                                 CreateFrame('Frame', nil, UIParent, 'tdTipCustomPositionFrameTemplate'))
+                        end
+                        customPosition:SetShown(not customPosition:IsShown())
                     end,
-                },
-                resetCustomPos = {
-                    type = 'execute',
-                    name = 'Reset position',
-                    order = orderGen(),
-                    func = function()
-                        ns.profile.pos.custom = {point = 'BOTTOMRIGHT', x = -300, y = 200}
+                    hidden = function()
+                        return ns.profile.pos.type ~= ns.POS_TYPE.Custom
                     end,
                 },
             },
@@ -163,62 +169,4 @@ function Addon:LoadOptionFrame()
 
     AceConfigRegistry:RegisterOptionsTable('tdTip', options)
     AceConfigDialog:AddToBlizOptions('tdTip', 'tdTip')
-end
-
-function Addon:ToggleCustonPositionFrame()
-    local pos = ns.profile.pos.custom
-    local frame = self.customPositionFrame or self:CreateCustomPositionFrame()
-    frame:SetShown(not frame:IsShown())
-    frame:ClearAllPoints()
-    frame:SetPoint(pos.point, pos.x, pos.y)
-    frame:UpdateAnchor(pos.point)
-end
-
-function Addon:CreateCustomPositionFrame()
-    local frame = CreateFrame('Frame', nil, UIParent, 'tdTipCustomPositionFrameTemplate')
-    frame:Hide()
-    frame:SetPoint('CENTER')
-    frame:RegisterForDrag('LeftButton')
-    frame:SetScript('OnDragStart', frame.StartMoving)
-    frame:SetScript('OnDragStop', function()
-        frame:StopMovingOrSizing()
-        self:OnCustomPositionUpdate()
-    end)
-
-    frame.UpdateAnchor = function(_, point)
-        frame.point = point
-        for _, b in ipairs(frame.buttons) do
-            b:SetChecked(point == b:GetPoint())
-        end
-        self:OnCustomPositionUpdate()
-    end
-
-    self.customPositionFrame = frame
-    return frame
-end
-
-function Addon:OnCustomPositionUpdate()
-    local frame = self.customPositionFrame
-    local point = frame.point
-    local x, y
-    if point == 'TOPLEFT' then
-        x = frame:GetLeft()
-        y = frame:GetTop() - UIParent:GetHeight()
-    elseif point == 'TOPRIGHT' then
-        x = frame:GetRight() - UIParent:GetWidth()
-        y = frame:GetTop() - UIParent:GetHeight()
-    elseif point == 'BOTTOMLEFT' then
-        x = frame:GetLeft()
-        y = frame:GetBottom()
-    elseif point == 'BOTTOMRIGHT' then
-        x = frame:GetRight() - UIParent:GetWidth()
-        y = frame:GetBottom()
-    end
-
-    local pos = ns.profile.pos.custom
-    pos.point = point
-    pos.x = x
-    pos.y = y
-
-    dump(pos)
 end

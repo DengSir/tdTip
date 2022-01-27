@@ -6,41 +6,19 @@
 ---@class ns
 local ns = select(2, ...)
 
----@class Addon: AceAddon-3.0, AceEvent-3.0
-local Addon = LibStub('AceAddon-3.0'):NewAddon('tdTip', 'AceEvent-3.0')
+local S = ns.Strings
+local F = ns.Formats
+
+local Formats = CopyTable(F)
+wipe(F)
+
+---@class Addon: AceAddon-3.0, AceEvent-3.0, LibClass-2.0
+local Addon = LibStub('AceAddon-3.0'):NewAddon('tdTip', 'AceEvent-3.0', 'LibClass-2.0')
 ns.AddOn = Addon
 
 function Addon:OnInitialize()
-    ---@class DATABASE
-    local db = {
-        ---@class DATABASE.profile
-        profile = { --
-            showPvpName = true,
-            showGuildRank = true,
-            showOffline = true,
-            showAFK = true,
-            showDND = true,
-
-            pos = {type = ns.POS_TYPE.System, custom = {point = 'BOTTOMRIGHT', x = -300, y = 200}},
-
-            bar = {height = 4, padding = 9},
-
-            ---@class DATABASE.profile.colors
-            colors = {
-                guildColor = {r = 1, g = 0, b = 1},
-                guildRankColor = {r = 0.8, g = 0.53, b = 1},
-                friendColor = {r = 0, g = 1, b = 0.2},
-                enemyColor = {r = 1, g = 0, b = 0},
-                playerTitleColor = {r = 0.8, g = 1, b = 1},
-                realmColor = {r = 0, g = 0.93, b = 0.93},
-
-                npcTitleColor = {r = 0.6, g = 0.9, b = 0.9},
-                reactionColor = {r = 0.2, g = 1, b = 1},
-            },
-        },
-    }
     ---@class db: AceDB-3.0, DATABASE
-    self.db = LibStub('AceDB-3.0'):New('TDDB_TIP', db)
+    self.db = LibStub('AceDB-3.0'):New('TDDB_TIP', ns.DATABASE)
 
     local function UpdateProfile()
         return self:OnProfileUpdate()
@@ -48,9 +26,6 @@ function Addon:OnInitialize()
 
     self.db:RegisterCallback('OnProfileChanged', UpdateProfile)
     self.db:RegisterCallback('OnProfileReset', UpdateProfile)
-
-    ---@type DATABASE.profile.colors
-    ns.colors = {}
 
     self:LoadOptionFrame()
 end
@@ -65,9 +40,25 @@ function Addon:OnProfileUpdate()
     ---@type DATABASE.profile
     ns.profile = self.db.profile
 
-    local colors = wipe(ns.colors)
+    self:UpdateColors()
+    self:UpdateFormats()
+end
 
+function Addon:UpdateColors()
+    local C = wipe(ns.Colors)
     for k, v in pairs(ns.profile.colors) do
-        colors[k] = ns.colorHex(v)
+        C[k] = ns.colorHex(v)
     end
+end
+
+function Addon:UpdateFormats()
+    for k, v in pairs(Formats) do
+        F[k] = v:gsub('{(.+)}', function(x)
+            return ns.colorHex(ns.profile.colors[x])
+        end)
+    end
+
+    wipe(S.REACTIONS)
+
+    dump(F)
 end

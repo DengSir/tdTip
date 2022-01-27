@@ -12,7 +12,3 @@ local Item = ns.AddOn:NewModule('Item', 'AceHook-3.0')
 function Item:OnEnable()
 
 end
-
-function Item:HookTip(tip)
-    -- body...
-end

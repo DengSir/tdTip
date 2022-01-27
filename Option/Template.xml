@@ -14,7 +14,7 @@
             </OnClick>
         </Scripts>
     </CheckButton>
-    <Frame name="tdTipCustomPositionFrameTemplate" enableMouse="true" movable="true" clampedToScreen="true" frameStrata="FULLSCREEN_DIALOG" inherits="TooltipBackdropTemplate" virtual="true">
+    <Frame name="tdTipCustomPositionFrameTemplate" hidden="true" enableMouse="true" movable="true" clampedToScreen="true" frameStrata="FULLSCREEN_DIALOG" inherits="TooltipBackdropTemplate" virtual="true">
         <Size x="200" y="100" />
         <Frames>
             <CheckButton parentKey="TopLeft" inherits="tdTipCustomPositionAnchorTemplate">
@@ -37,10 +37,27 @@
                     <Anchor point="BOTTOMRIGHT" x="-5" y="5" />
                 </Anchors>
             </CheckButton>
-            <Button parentKey="Close" inherits="UIPanelCloseButton">
+            <Button parentKey="Close" inherits="UIPanelButtonTemplate" text="CLOSE">
+                <Size x="60" y="22" />
                 <Anchors>
-                    <Anchor point="CENTER" />
+                    <Anchor point="BOTTOMRIGHT" relativePoint="BOTTOM" x="0" y="3" />
                 </Anchors>
+                <Scripts>
+                    <OnClick>
+                        self:GetParent():Hide()
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Button parentKey="ResetButton" inherits="UIPanelButtonTemplate" text="RESET">
+                <Size x="60" y="22" />
+                <Anchors>
+                    <Anchor point="BOTTOMLEFT" relativePoint="BOTTOM" x="0" y="3" />
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        self:GetParent():Reset()
+                    </OnClick>
+                </Scripts>
             </Button>
         </Frames>
     </Frame>

@@ -1,3 +1,4 @@
+---@diagnostic disable: undefined-global
 -- Api.lua
 -- @Author : Dencer (tdaddon@163.com)
 -- @Link   : https://dengsir.github.io
@@ -35,20 +36,44 @@ local function colorHex(color)
     end
     return format('ff%02x%02x%02x', color.r * 255, color.g * 255, color.b * 255)
 end
-ns.colorHex = colorHex
+
+ns.colorHex = memorize(colorHex, 'k')
 
 local function strcolor(text, color)
-    if not text then
-        return
-    end
-    if not color then
+    if not text or not color then
         return text
     end
     return WrapTextInColorCode(text, colorHex(color))
 end
 ns.strcolor = strcolor
 
-ns.GREY_COLOR = colorHex({r = 0.5, g = 0.5, b = 0.5})
+function ns.UnitColor(unitOrIsPlayer, classFileName, reaction)
+    local isPlayer, color
+    if classFileName or reaction then
+        isPlayer = unitOrIsPlayer
+    else
+        local unit = unitOrIsPlayer
+        isPlayer = UnitIsPlayer(unit)
+        classFileName = UnitClassBase(unit)
+        reaction = UnitReaction(unit, 'player')
+    end
+
+    if isPlayer then
+        if classFileName then
+            color = RAID_CLASS_COLORS[classFileName]
+        end
+    else
+        if reaction then
+            color = FACTION_BAR_COLORS[reaction]
+        end
+    end
+    return color or HIGHLIGHT_FONT_COLOR
+end
+
+ns.GRAY_COLOR = colorHex(GRAY_FONT_COLOR)
+ns.WHITE_COLOR = colorHex(HIGHLIGHT_FONT_COLOR)
+ns.RED_COLOR = colorHex(RED_FONT_COLOR)
+ns.GOLD_COLOR = colorHex(NORMAL_FONT_COLOR)
 
 local L = setmetatable({}, {
     __index = function(t, k)
@@ -58,50 +83,15 @@ local L = setmetatable({}, {
 
 ns.L = L
 
-ns.CLASSIFICATIONS = {
-    elite = strcolor(ELITE, 'ffffff33'),
-    worldboss = strcolor(BOSS, 'ffff0000'),
-    rare = strcolor(L.Rare, 'ffff66ff'),
-    rareelite = strcolor(L.Rare .. ELITE, 'ffffaaff'),
+ns.POS_TYPE = { --
+    System = 1,
+    Cursor = 2,
+    Custom = 3,
 }
 
-ns.RAID_ICONS = setmetatable({}, {
-    __index = function(t, k)
-        t[k] = format([[Interface\TargetingFrame\UI-RaidTargetingIcon_%d]], k)
-        return t[k]
-    end,
-})
+---@type DATABASE.profile.colors
+ns.Colors = {}
 
-ns.FACTION_ICONS = {
-    Alliance = [[Interface\Timer\Alliance-Logo]],
-    Horde = [[Interface\Timer\Horde-Logo]],
-    Neutral = [[Interface\Timer\Panda-Logo]],
-}
-
-ns.RAID_ICON_STRINGS = setmetatable({}, {
-    __index = function(t, k)
-        t[k] = format([[|TInterface\TargetingFrame\UI-RaidTargetingIcon_%d:18:18|t]], k)
-        return t[k]
-    end,
-})
-
-ns.CLASS_ICON_STRINGS = setmetatable({}, {
-    __index = function(t, k)
-        local coords = CLASS_ICON_TCOORDS[k]
-        t[k] = format([[|TInterface\WorldStateFrame\ICONS-CLASSES:%%d:%%d:0:0:256:256:%d:%d:%d:%d|t]], coords[1] * 0xFF,
-                      coords[2] * 0xFF, coords[3] * 0xFF, coords[4] * 0xFF)
-        return t[k]
-    end,
-})
-
-ns.REACTION_STRINGS = setmetatable({}, {
-    __index = function(t, k)
-        t[k] = format('<%s>', _G['FACTION_STANDING_LABEL' .. k])
-        return t[k]
-    end,
-})
-
-ns.POS_TYPE = {System = 1, Cursor = 2, Custom = 3}
 
 do
     local stringbuilder = {}
@@ -126,3 +116,35 @@ do
 
     ns.stringbuilder = stringbuilder
 end
+
+ns.DEFAULT_CUSTOM_POSITION = {point = 'BOTTOMRIGHT', x = -300, y = 200}
+
+---@class DATABASE
+ns.DATABASE = {
+    ---@class DATABASE.profile
+    profile = { --
+        showPvpName = true,
+        showGuildRank = true,
+        showOffline = true,
+        showAFK = true,
+        showDND = true,
+        showFactionIcon = true,
+
+        pos = {type = ns.POS_TYPE.System, custom = ns.DEFAULT_CUSTOM_POSITION},
+
+        bar = {height = 4, padding = 9},
+
+        ---@class DATABASE.profile.colors
+        colors = {
+            guildColor = {r = 1, g = 0, b = 1},
+            guildRankColor = {r = 0.8, g = 0.53, b = 1},
+            friendColor = {r = 0, g = 1, b = 0.2},
+            enemyColor = {r = 1, g = 0, b = 0},
+            playerTitleColor = {r = 0.8, g = 1, b = 1},
+            realmColor = {r = 0, g = 0.93, b = 0.93},
+
+            npcTitleColor = {r = 0.6, g = 0.9, b = 0.9},
+            reactionColor = {r = 0.2, g = 1, b = 1},
+        },
+    },
+}
