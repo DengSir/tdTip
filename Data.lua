@@ -23,8 +23,8 @@ ns.Formats = Formats
 local Strings = { --
     DEAD = strcolor(DEAD, ns.RED_COLOR),
     OFFLINE = strcolor(PLAYER_OFFLINE, ns.GRAY_COLOR),
-    AFK = strcolor(AFK, ns.GRAY_COLOR),
-    DND = strcolor(DND, ns.GRAY_COLOR),
+    AFK = strcolor(DEFAULT_AFK_MESSAGE, ns.GRAY_COLOR),
+    DND = strcolor(DEFAULT_DND_MESSAGE, ns.GRAY_COLOR),
 
     YOU = strcolor(format('>> %s <<', L.YOU), ns.RED_COLOR),
 

@@ -9,21 +9,19 @@ local ns = select(2, ...)
 ---@class Skin: AceAddon-3.0, AceEvent-3.0
 local Skin = ns.AddOn:NewModule('Skin', 'AceEvent-3.0')
 
-local frames = { --
-    GameTooltip, --
-    DropDownList1MenuBackdrop, --
-    DropDownList2MenuBackdrop, --
-    LibDBIconTooltip, --
-    AceGUITooltip, --
-    AceConfigDialogTooltip, --
-}
-
 function Skin:OnInitialize()
-
+    self.frames = { --
+        GameTooltip, --
+        DropDownList1MenuBackdrop, --
+        DropDownList2MenuBackdrop, --
+        LibDBIconTooltip, --
+        AceGUITooltip, --
+        AceConfigDialogTooltip, --
+    }
 end
 
 function Skin:OnEnable()
-    for _, frame in ipairs(frames) do
+    for _, frame in ipairs(self.frames) do
         self:Apply(frame)
     end
 end

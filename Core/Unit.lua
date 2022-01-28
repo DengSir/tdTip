@@ -355,7 +355,7 @@ end
 
 function Unit:UpdateTarget()
     local _, unit = self.tip:GetUnit()
-    if not unit or not UnitExists(unit) then
+    if not unit or not UnitExists(unit) or not UnitExists('mouseover') then
         return
     end
 

@@ -10,6 +10,7 @@
     <Script file="Core\Anchor.lua" />
     <Script file="Core\Skin.lua" />
     <Script file="Core\Spell.lua" />
+    <Script file="Core\Item.lua" />
 
     <Include file="Option\Template.xml" />
     <Script file="Option\Option.lua" />
