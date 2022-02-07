@@ -92,7 +92,6 @@ ns.POS_TYPE = { --
 ---@type DATABASE.profile.colors
 ns.Colors = {}
 
-
 do
     local stringbuilder = {}
     local sb = {}
@@ -131,7 +130,7 @@ ns.DATABASE = {
         showFactionIcon = true,
         showClassIcon = true,
 
-        classIconSize = 24,
+        classIconSize = 18,
         raidIconSize = 32,
 
         pos = {type = ns.POS_TYPE.System, custom = ns.DEFAULT_CUSTOM_POSITION},
@@ -150,5 +149,7 @@ ns.DATABASE = {
             npcTitleColor = {r = 0.6, g = 0.9, b = 0.9},
             reactionColor = {r = 0.2, g = 1, b = 1},
         },
+
+        showItemLevelOnlyEquip = true,
     },
 }

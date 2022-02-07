@@ -18,7 +18,7 @@ ns.AddOn = Addon
 
 function Addon:OnInitialize()
     ---@class db: AceDB-3.0, DATABASE
-    self.db = LibStub('AceDB-3.0'):New('TDDB_TIP', ns.DATABASE)
+    self.db = LibStub('AceDB-3.0'):New('TDDB_TIP', ns.DATABASE, true)
 
     local function UpdateProfile()
         return self:OnProfileUpdate()

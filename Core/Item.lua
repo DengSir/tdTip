@@ -37,10 +37,17 @@ local APIS = {
     'SetExistingSocketGem',
     'SetSocketGem',
     'SetSocketedItem',
-    SetCraftItem = true,
+    SetCraftItem = function(index, slot)
+        if not slot then
+            return GetCraftItemLink(index)
+        else
+            return GetCraftReagentItemLink(index, slot)
+        end
+    end,
 }
 
 function Item:OnInitialize()
+    self.handlers = {}
     self.pendings = {}
 end
 
@@ -56,94 +63,116 @@ function Item:GET_ITEM_INFO_RECEIVED(_, itemId, ok)
         return
     end
 
-    C_Timer.After(0, function()
-        local pendings = self.pendings[itemId]
-        if not pendings then
-            return
-        end
+    local pendings = self.pendings[itemId]
+    if not pendings then
+        return
+    end
+
+    C_Timer.After(0.05, function()
         self.pendings[itemId] = nil
 
-        print(itemId)
-
-        for _, tip in ipairs(pendings) do
-            self:Translate(tip, itemId)
+        for tip, info in pairs(pendings) do
+            tip:ClearLines()
+            tip[info.method](tip, unpack(info.args, 1, info.argsCount))
         end
     end)
 end
 
 function Item:HookTip(rawTip)
-    -- local api, handler
-    -- for k, v in pairs(APIS) do
-    --     if type(k) == 'number' then
-    --         api, handler = v, 'OnCall'
-    --     elseif type(v) == 'string' then
-    --         api, handler = k, v
-    --     else
-    --         api, handler = k, k
-    --     end
+    for k, v in pairs(APIS) do
+        local api
+        if type(k) == 'number' then
+            api = v
+        else
+            api = k
+        end
 
-    --     if rawTip[api] then
-    --         self:SecureHook(rawTip, api, handler)
-    --     end
-    -- end
+        if rawTip[api] then
+            self:SecureHook(rawTip, api, function(t, ...)
+                return self:OnCall(t, api, ...)
+            end)
+        end
+    end
 
-    self:HookScript(rawTip, 'OnTooltipSetItem', 'OnCall')
+    do
+        local tip = LibTooltipExtra:New(rawTip)
+        tip:GetFontStringLeft(1):SetFontObject('GameTooltipHeaderText')
+        tip:GetFontStringRight(1):SetFontObject('GameTooltipHeaderText')
+
+    end
 
     if rawTip.shoppingTooltips then
         for _, shoppingTip in ipairs(rawTip.shoppingTooltips) do
-            -- self:SecureHook(shoppingTip, 'SetCompareItem', 'OnCompareItem')
+            self:SecureHook(shoppingTip, 'SetCompareItem', 'OnCompareItem')
             self:HookTip(shoppingTip)
+
+            local tip = LibTooltipExtra:New(shoppingTip)
+            tip:GetFontStringLeft(2):SetFontObject('GameTooltipHeaderText')
+            tip:GetFontStringRight(2):SetFontObject('GameTooltipHeaderText')
+
+            local i = 3
+            while tip:GetFontStringLeft(i) do
+                tip:GetFontStringLeft(i):SetFontObject('GameTooltipText')
+                tip:GetFontStringRight(i):SetFontObject('GameTooltipText')
+
+                i = i + 1
+            end
         end
+
     end
 end
 
 function Item:OnCompareItem(tip1, tip2)
-    self:OnCall(tip1)
-    self:OnCall(tip2)
+    self:OnCall(tip1, 'SetHyperlink', select(2, tip1:GetItem()))
+    self:OnCall(tip2, 'SetHyperlink', select(2, tip2:GetItem()))
 end
 
-function Item:OnCall(rawTip)
-    return self:Translate(rawTip, select(2, rawTip:GetItem()))
-end
-
-function Item:SetCraftItem(rawTip, index, slot)
-    if not slot then
-        return self:Translate(rawTip, GetCraftItemLink(index))
+function Item:OnCall(rawTip, method, ...)
+    local link
+    if APIS[method] then
+        link = APIS[method](...)
     else
-        return self:Translate(rawTip, GetCraftReagentItemLink(index, slot))
+        link = select(2, rawTip:GetItem())
     end
-end
 
-function Item:Translate(rawTip, item)
-    if not item then
+    print(method, link)
+
+    if not link then
         return
     end
-    return self:OnTooltipSetItem(LibTooltipExtra:New(rawTip), item)
+
+    local pendingItemId = self:OnTooltipSetItem(LibTooltipExtra:New(rawTip), link)
+    if not pendingItemId then
+        return
+    end
+
+    self.pendings[pendingItemId] = self.pendings[pendingItemId] or {}
+    self.pendings[pendingItemId][rawTip] = { --
+        method = method,
+        argsCount = select('#', ...),
+        args = {...},
+    }
 end
 
 ---@param tip LibGameTooltip
 ---@param item string
 function Item:OnTooltipSetItem(tip, item)
     local name, _, quality, itemLevel, _, _, _, _, equipLoc, icon = GetItemInfo(item)
-    print(item, name, quality, itemLevel, equipLoc, icon)
+    print(name, quality, itemLevel)
     if not name then
-
-        local itemId = tonumber(item) or GetItemInfoFromHyperlink(item)
-        if itemId then
-            self:Pending(tip, itemId)
-        end
-
-        print(itemId)
-
-        return
+        return tonumber(item) or GetItemInfoFromHyperlink(item)
     end
 
     local nameLineNum = tip:GetFontStringLeft(1):GetText() == CURRENTLY_EQUIPPED and 2 or 1
 
-    tip:AppendLineFrontLeft(nameLineNum + 1, format(ITEM_LEVEL, itemLevel))
+    tip:GetFontStringLeft(2):SetFontObject(nameLineNum == 2 and 'GameTooltipHeaderText' or 'GameTooltipText')
 
     local nameLine = tip:GetFontStringLeft(nameLineNum)
     nameLine:SetFormattedText('|T%s:18|t %s', icon, nameLine:GetText())
+
+    if not ns.profile.showItemLevelOnlyEquip or equipLoc ~= '' then
+        tip:AppendLineFrontLeft(nameLineNum + 1, format(ITEM_LEVEL, itemLevel))
+    end
 
     local r, g, b = GetItemQualityColor(quality)
     if r then
@@ -151,11 +180,4 @@ function Item:OnTooltipSetItem(tip, item)
     end
 
     tip:Show()
-end
-
----@param tip LibGameTooltip
----@param itemId number
-function Item:Pending(tip, itemId)
-    self.pendings[itemId] = self.pendings[itemId] or {}
-    tinsert(self.pendings[itemId], tip.tip)
 end

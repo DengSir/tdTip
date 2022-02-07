@@ -62,10 +62,11 @@ function Unit:OnEnable()
 
     self.bar.lockColor = true
     self.bar:SetStatusBarTexture([[Interface\AddOns\tdTip\Media\StatusBar]])
-end
 
-function Unit:OnDisable()
-    self.bar.lockColor = nil
+    self.bar.bg = self.bar:CreateTexture(nil, 'BACKGROUND')
+    self.bar.bg:SetAllPoints(true)
+    self.bar.bg:SetTexture([[Interface\AddOns\tdTip\Media\StatusBar]])
+    self.bar.bg:SetVertexColor(1, 1, 1, 0.2)
 end
 
 function Unit:OnSettingUpdate()
@@ -353,9 +354,12 @@ function Unit:UpdateFactionIcon()
     self.factionIcon:Show()
 end
 
-function Unit:UpdateTarget()
+function Unit:UpdateTarget(first)
     local _, unit = self.tip:GetUnit()
-    if not unit or not UnitExists(unit) or not UnitExists('mouseover') then
+    if not unit or not UnitExists(unit) then
+        return
+    end
+    if not first and not UnitExists('mouseover') then
         return
     end
 
