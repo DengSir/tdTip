@@ -7,13 +7,9 @@
 local ns = select(2, ...)
 
 local strcolor = ns.strcolor
+local strjoin = ns.strjoin
 
-local L = ns.L
-
-local S = ns.Strings
-local F = ns.Formats
-local I = ns.Icons
-local C = ns.Colors
+local S, F, O, C, P = ns.S, ns.F, ns.O, ns.C, ns.P
 
 local CLEAR_LINES = { --
     [PVP] = true,
@@ -33,8 +29,6 @@ function Unit:OnInitialize()
     self.info = {}
     ---@class lines
     self.lines = {}
-
-    self.sb = ns.stringbuilder
 
     self.PLAYER_FACTION = select(2, UnitFactionGroup('player'))
 
@@ -70,13 +64,13 @@ function Unit:OnEnable()
 end
 
 function Unit:OnSettingUpdate()
-    local padding = ns.profile.bar.padding
-    self.bar:SetHeight(ns.profile.bar.height)
+    local padding = P.bar.padding
+    self.bar:SetHeight(P.bar.height)
     self.bar:ClearAllPoints()
     self.bar:SetPoint('BOTTOMLEFT', GameTooltip.NineSlice, 'BOTTOMLEFT', padding, padding)
     self.bar:SetPoint('BOTTOMRIGHT', GameTooltip.NineSlice, 'BOTTOMRIGHT', -padding, padding)
 
-    local size = ns.profile.raidIconSize
+    local size = P.raidIconSize
     self.raidIcon:SetSize(size, size)
 end
 
@@ -183,12 +177,11 @@ function Unit:UpdateInfo(unit)
         info.class = strcolor(info.class, info.classColor)
         info.race = strcolor(info.race, info.isFriend and C.friendColor or C.enemyColor)
 
-        if ns.profile.showClassIcon then
-            local size = ns.profile.classIconSize
-            info.classIcon = I.Class[info.classFileName]:format(size, size)
+        if P.showClassIcon then
+            info.classIcon = O.Class[info.classFileName]
         end
 
-        local pvpName = ns.profile.showPvpName and UnitPVPName(unit)
+        local pvpName = P.showPvpName and UnitPVPName(unit)
         if pvpName then
             info.name = pvpName:gsub(info.name, strcolor(info.name, info.classColor))
             info.name = strcolor(info.name, C.playerTitleColor)
@@ -198,22 +191,22 @@ function Unit:UpdateInfo(unit)
 
         if info.guild then
             info.guild = F.Guild:format(info.guild)
-            info.guildRank = ns.profile.showGuildRank and F.GuildRank:format(info.guildRank) or nil
+            info.guildRank = P.showGuildRank and F.GuildRank:format(info.guildRank) or nil
         end
 
         if info.realm then
             info.realm = F.Realm:format(info.realm)
         end
 
-        if ns.profile.showOffline and not UnitIsConnected(unit) then
+        if P.showOffline and not UnitIsConnected(unit) then
             info.offline = S.OFFLINE
         end
 
-        if ns.profile.showAFK and UnitIsAFK(unit) then
+        if P.showAFK and UnitIsAFK(unit) then
             info.afk = S.AFK
         end
 
-        if ns.profile.showDND and UnitIsDND(unit) then
+        if P.showDND and UnitIsDND(unit) then
             info.dnd = S.DND
         end
     else
@@ -235,8 +228,8 @@ function Unit:UpdateInfo(unit)
         end
     end
 
-    local right = ns.profile.showFactionIcon and info.factionFileName and 52 or nil
-    local bottom = not info.isDead and ns.profile.bar.padding + ns.profile.bar.height - 5 or nil
+    local right = P.showFactionIcon and info.factionFileName and 52 or nil
+    local bottom = not info.isDead and P.bar.padding + P.bar.height - 5 or nil
 
     ns.Anchor:SetMargins(nil, right, nil, bottom)
 end
@@ -252,24 +245,15 @@ end
 
 function Unit:UpdateNameLine()
     local info = self.info
-
-    local sb = self.sb:wipe()
-    sb:push(info.classIcon)
-    sb:push(info.name)
-    sb:push(info.realm)
-
-    self.tip:GetFontStringLeft(1):SetText(sb:join(' '))
+    local text = strjoin(info.classIcon, info.name, info.realm)
+    self.tip:GetFontStringLeft(1):SetText(text)
 end
 
 function Unit:UpdateGuildLine()
     local info = self.info
 
-    local sb = self.sb:wipe()
-    sb:push(info.guild)
-    sb:push(info.guildRank)
-
-    local text = sb:join(' ')
-    if not text or text == '' then
+    local text = strjoin(info.guild, info.guildRank)
+    if not text then
         return
     end
 
@@ -290,21 +274,11 @@ function Unit:UpdateNpcTitleLine()
 end
 
 function Unit:UpdateLevelLine()
-    local sb = self.sb:wipe()
     local info = self.info
+    local text = strjoin(info.level, info.race, info.class, info.type, info.classification, info.reactionName,
+                         info.dead, info.offline, info.afk, info.dnd)
 
-    sb:push(info.level)
-    sb:push(info.race)
-    sb:push(info.class)
-    sb:push(info.type)
-    sb:push(info.classification)
-    sb:push(info.reactionName)
-    sb:push(info.dead)
-    sb:push(info.offline)
-    sb:push(info.afk)
-    sb:push(info.dnd)
-
-    self.tip:GetFontStringLeft(self.lines.level):SetText(sb:join(' '))
+    self.tip:GetFontStringLeft(self.lines.level):SetText(text)
 end
 
 function Unit:UpdateBorder()
@@ -337,12 +311,12 @@ function Unit:UpdateRaidIcon()
         return
     end
 
-    self.raidIcon:SetTexture(I.Raid[info.raidIndex])
+    self.raidIcon:SetTexture(O.Raid[info.raidIndex])
     self.raidIcon:Show()
 end
 
 function Unit:UpdateFactionIcon()
-    if not ns.profile.showFactionIcon then
+    if not P.showFactionIcon then
         return
     end
     local info = self.info
@@ -350,7 +324,7 @@ function Unit:UpdateFactionIcon()
         return
     end
 
-    self.factionIcon:SetTexture(I.Faction[info.factionFileName])
+    self.factionIcon:SetTexture(O.Faction[info.factionFileName])
     self.factionIcon:Show()
 end
 

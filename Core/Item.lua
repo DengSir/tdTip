@@ -6,9 +6,9 @@
 ---@class ns
 local ns = select(2, ...)
 
-local LibTooltipExtra = LibStub('LibTooltipExtra-1.0')
+local S, P = ns.S, ns.P
 
-local ITEM_LEVEL = NORMAL_FONT_COLOR_CODE .. ITEM_LEVEL_PLUS:gsub(' *%%d%+$', ' %%d') .. '|r'
+local LibTooltipExtra = LibStub('LibTooltipExtra-1.0')
 
 ---@class Item: AceAddon-3.0, AceEvent-3.0, AceHook-3.0
 local Item = ns.AddOn:NewModule('Item', 'AceEvent-3.0', 'AceHook-3.0')
@@ -47,15 +47,22 @@ local APIS = {
 }
 
 function Item:OnInitialize()
-    self.handlers = {}
     self.pendings = {}
 end
 
 function Item:OnEnable()
-    self:HookTip(GameTooltip)
-    self:HookTip(ItemRefTooltip)
+    for _, name in ipairs(ns.Tooltips) do
+        local rawTip = _G[name]
+        if rawTip then
+            self:HookTip(rawTip)
+        end
+    end
 
     self:RegisterEvent('GET_ITEM_INFO_RECEIVED')
+end
+
+function Item:OnDisable()
+    wipe(self.pendings)
 end
 
 function Item:GET_ITEM_INFO_RECEIVED(_, itemId, ok)
@@ -98,7 +105,6 @@ function Item:HookTip(rawTip)
         local tip = LibTooltipExtra:New(rawTip)
         tip:GetFontStringLeft(1):SetFontObject('GameTooltipHeaderText')
         tip:GetFontStringRight(1):SetFontObject('GameTooltipHeaderText')
-
     end
 
     if rawTip.shoppingTooltips then
@@ -118,7 +124,6 @@ function Item:HookTip(rawTip)
                 i = i + 1
             end
         end
-
     end
 end
 
@@ -135,30 +140,23 @@ function Item:OnCall(rawTip, method, ...)
         link = select(2, rawTip:GetItem())
     end
 
-    print(method, link)
-
     if not link then
         return
     end
 
-    local pendingItemId = self:OnTooltipSetItem(LibTooltipExtra:New(rawTip), link)
-    if not pendingItemId then
+    local itemId = self:OnTooltipSetItem(LibTooltipExtra:New(rawTip), link)
+    if not itemId then
         return
     end
 
-    self.pendings[pendingItemId] = self.pendings[pendingItemId] or {}
-    self.pendings[pendingItemId][rawTip] = { --
-        method = method,
-        argsCount = select('#', ...),
-        args = {...},
-    }
+    self.pendings[itemId] = self.pendings[itemId] or {}
+    self.pendings[itemId][rawTip] = {method = method, argsCount = select('#', ...), args = {...}}
 end
 
 ---@param tip LibGameTooltip
 ---@param item string
 function Item:OnTooltipSetItem(tip, item)
     local name, _, quality, itemLevel, _, _, _, _, equipLoc, icon = GetItemInfo(item)
-    print(name, quality, itemLevel)
     if not name then
         return tonumber(item) or GetItemInfoFromHyperlink(item)
     end
@@ -170,8 +168,8 @@ function Item:OnTooltipSetItem(tip, item)
     local nameLine = tip:GetFontStringLeft(nameLineNum)
     nameLine:SetFormattedText('|T%s:18|t %s', icon, nameLine:GetText())
 
-    if not ns.profile.showItemLevelOnlyEquip or equipLoc ~= '' then
-        tip:AppendLineFrontLeft(nameLineNum + 1, format(ITEM_LEVEL, itemLevel))
+    if not P.showItemLevelOnlyEquip or equipLoc ~= '' then
+        tip:AppendLineFrontLeft(nameLineNum + 1, format(S.ITEM_LEVEL, itemLevel))
     end
 
     local r, g, b = GetItemQualityColor(quality)

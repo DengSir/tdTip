@@ -7,6 +7,8 @@
 local ns = select(2, ...)
 
 local L = ns.L
+local P = ns.P
+local POS_TYPE = ns.POS_TYPE
 
 ---@class Addon
 local Addon = ns.AddOn
@@ -22,7 +24,7 @@ function Addon:LoadOptionFrame()
 
     local function get(paths)
         ---@type any
-        local d = ns.profile
+        local d = P
         for _, v in ipairs(paths) do
             if v ~= 'general' then
                 d = d[v]
@@ -36,7 +38,7 @@ function Addon:LoadOptionFrame()
     end
 
     local function set(paths, ...)
-        local d = ns.profile
+        local d = P
         local n = #paths
         for i, v in ipairs(paths) do
             if i < n then
@@ -51,9 +53,9 @@ function Addon:LoadOptionFrame()
                 else
                     d[v] = ...
                 end
-                self:SendMessage('TDTIP_SETTING_UPDATE')
             end
         end
+        self:SendMessage('TDTIP_SETTING_UPDATE')
     end
 
     local function inline(name)
@@ -129,9 +131,9 @@ function Addon:LoadOptionFrame()
 
             pos = inline(L['Position']) {
                 type = drop(L['Type']) {
-                    {name = L['System'], value = ns.POS_TYPE.System}, --
-                    {name = L['Cursor'], value = ns.POS_TYPE.Cursor}, --
-                    {name = L['Custom'], value = ns.POS_TYPE.Custom},
+                    {name = L['System'], value = POS_TYPE.System}, --
+                    {name = L['Cursor'], value = POS_TYPE.Cursor}, --
+                    {name = L['Custom'], value = POS_TYPE.Custom},
                 },
                 custom = {
                     type = 'execute',
@@ -145,7 +147,7 @@ function Addon:LoadOptionFrame()
                         customPosition:SetShown(not customPosition:IsShown())
                     end,
                     hidden = function()
-                        return ns.profile.pos.type ~= ns.POS_TYPE.Custom
+                        return P.pos.type ~= POS_TYPE.Custom
                     end,
                 },
             },

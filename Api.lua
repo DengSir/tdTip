@@ -36,16 +36,31 @@ local function colorHex(color)
     end
     return format('ff%02x%02x%02x', color.r * 255, color.g * 255, color.b * 255)
 end
-
 ns.colorHex = memorize(colorHex, 'k')
 
-local function strcolor(text, color)
+function ns.strcolor(text, color)
     if not text or not color then
         return text
     end
     return WrapTextInColorCode(text, colorHex(color))
 end
-ns.strcolor = strcolor
+
+do
+    local _sb = {}
+
+    function ns.strjoin(...)
+        local sb = wipe(_sb)
+        for i = 1, select('#', ...) do
+            local v = select(i, ...)
+            if v ~= nil then
+                sb[#sb + 1] = v
+            end
+        end
+        if #sb > 0 then
+            return table.concat(sb, ' ')
+        end
+    end
+end
 
 function ns.UnitColor(unitOrIsPlayer, classFileName, reaction)
     local isPlayer, color
@@ -89,33 +104,6 @@ ns.POS_TYPE = { --
     Custom = 3,
 }
 
----@type DATABASE.profile.colors
-ns.Colors = {}
-
-do
-    local stringbuilder = {}
-    local sb = {}
-    function stringbuilder:wipe()
-        wipe(sb)
-        return self
-    end
-
-    function stringbuilder:push(text)
-        if text then
-            sb[#sb + 1] = text
-        end
-    end
-
-    function stringbuilder:join(sep)
-        if #sb == 0 then
-            return
-        end
-        return table.concat(sb, sep)
-    end
-
-    ns.stringbuilder = stringbuilder
-end
-
 ns.DEFAULT_CUSTOM_POSITION = {point = 'BOTTOMRIGHT', x = -300, y = 200}
 
 ---@class DATABASE
@@ -153,3 +141,17 @@ ns.DATABASE = {
         showItemLevelOnlyEquip = true,
     },
 }
+
+ns.PROFILED_TABLES = {}
+function ns.profiled(get)
+    local tbl = {}
+    tinsert(ns.PROFILED_TABLES, tbl)
+
+    return setmetatable(tbl, {
+        __index = function(t, k)
+            local v = get(k)
+            t[k] = v
+            return v
+        end,
+    })
+end

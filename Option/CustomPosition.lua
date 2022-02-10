@@ -6,6 +6,8 @@
 ---@class ns
 local ns = select(2, ...)
 
+local P = ns.P
+
 ---@class UI.CustomPosition: Object, tdTipCustomPositionFrameTemplate
 ---@field buttons CheckButton[]
 local CustomPosition = ns.AddOn:NewClass('UI.CustomPosition', 'Frame')
@@ -25,7 +27,7 @@ function CustomPosition:OnDragStop()
 end
 
 function CustomPosition:Update()
-    local pos = ns.profile.pos.custom
+    local pos = P.pos.custom
 
     self:ClearAllPoints()
     self:SetPoint(pos.point, pos.x, pos.y)
@@ -40,7 +42,7 @@ function CustomPosition:UpdateAnchor(point)
 end
 
 function CustomPosition:OnCustomPositionUpdate(point)
-    point = point or ns.profile.pos.custom.point
+    point = point or P.pos.custom.point
 
     local x, y
     if point == 'TOPLEFT' then
@@ -57,7 +59,7 @@ function CustomPosition:OnCustomPositionUpdate(point)
         y = self:GetBottom()
     end
 
-    local pos = ns.profile.pos.custom
+    local pos = P.pos.custom
     pos.point = point or pos
     pos.x = x
     pos.y = y
@@ -66,6 +68,6 @@ function CustomPosition:OnCustomPositionUpdate(point)
 end
 
 function CustomPosition:Reset()
-    ns.profile.pos.custom = CopyTable(ns.DEFAULT_CUSTOM_POSITION)
+    P.pos.custom = CopyTable(ns.DEFAULT_CUSTOM_POSITION)
     self:Update()
 end

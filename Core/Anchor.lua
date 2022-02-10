@@ -6,6 +6,9 @@
 ---@class ns
 local ns = select(2, ...)
 
+local P = ns.P
+local POS_TYPE = ns.POS_TYPE
+
 ---@class Anchor: AceAddon-3.0, AceHook-3.0, AceEvent-3.0
 local Anchor = ns.AddOn:NewModule('Anchor', 'AceHook-3.0', 'AceEvent-3.0')
 ns.Anchor = Anchor
@@ -18,16 +21,8 @@ function Anchor:OnInitialize()
 end
 
 function Anchor:OnEnable()
-    self:OnSettingUpdate()
-
     self:HookScript(self.tip, 'OnTooltipCleared')
     self:SecureHook('GameTooltip_SetDefaultAnchor', 'OnTooltipSetDefaultAnchor')
-
-    self:RegisterMessage('TDTIP_SETTING_UPDATE', 'OnSettingUpdate')
-end
-
-function Anchor:OnSettingUpdate()
-    -- self.cursorUpdater:SetShown(ns.profile.pos.type == ns.POS_TYPE.Cursor)
 end
 
 function Anchor:OnTooltipCleared()
@@ -51,6 +46,7 @@ function Anchor:SetMargins(left, right, top, bottom)
     margins.right = right or nil
     margins.top = top or nil
     margins.bottom = bottom or nil
+
     self:UpdateMargins()
     self:UpdateAnchor()
 end
@@ -72,8 +68,8 @@ function Anchor:UpdateAnchor()
         return
     end
 
-    local posType = ns.profile.pos.type
-    if posType == ns.POS_TYPE.Cursor then
+    local posType = P.pos.type
+    if posType == POS_TYPE.Cursor then
         local owner = self.tip:GetOwner()
         if not owner or owner == UIParent or owner == WorldFrame then
             if self.tip:GetUnit() then
@@ -90,9 +86,9 @@ function Anchor:UpdateAnchor()
         end
     else
         local pos
-        if posType == ns.POS_TYPE.System then
+        if posType == POS_TYPE.System then
             pos = self:GetSystemAnchor()
-        elseif posType == ns.POS_TYPE.Custom then
+        elseif posType == POS_TYPE.Custom then
             pos = self:GetCustomAnchor()
         end
 
@@ -106,7 +102,7 @@ function Anchor:GetSystemAnchor()
 end
 
 function Anchor:GetCustomAnchor()
-    local pos = ns.profile.pos.custom
+    local pos = P.pos.custom
     return self:GetAnchor(pos.point, pos.x, pos.y)
 end
 

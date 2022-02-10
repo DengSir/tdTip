@@ -6,27 +6,51 @@
 ---@type ns
 local ns = select(2, ...)
 
----@class Skin: AceAddon-3.0, AceEvent-3.0
-local Skin = ns.AddOn:NewModule('Skin', 'AceEvent-3.0')
+---@class Skin: AceAddon-3.0, AceEvent-3.0, AceHook-3.0
+local Skin = ns.AddOn:NewModule('Skin', 'AceEvent-3.0', 'AceHook-3.0')
 
 function Skin:OnInitialize()
-    self.frames = { --
-        GameTooltip, --
-        ItemRefTooltip, --
-        DropDownList1MenuBackdrop, --
-        DropDownList2MenuBackdrop, --
-        LibDBIconTooltip, --
-        AceGUITooltip, --
-        AceConfigDialogTooltip, --
-    }
-
     ---@type table<Frame, Texture>
     self.masks = {}
 end
 
 function Skin:OnEnable()
-    for _, frame in ipairs(self.frames) do
-        self:Apply(frame)
+    self:ApplyFrames(ns.Tooltips)
+    self:ApplyFrames(ns.Frames)
+
+    self.dropmenuAppliedLevel = 0
+    self:UIDropDownMenu_CreateFrames()
+    self:SecureHook('UIDropDownMenu_CreateFrames')
+end
+
+function Skin:OnDisable()
+    for _, texture in ipairs(self.masks) do
+        texture:Hide()
+    end
+end
+
+function Skin:UIDropDownMenu_CreateFrames()
+    for i = self.dropmenuAppliedLevel + 1, UIDROPDOWNMENU_MAXLEVELS do
+        self:Apply(_G['DropDownList' .. i .. 'MenuBackdrop'])
+    end
+end
+
+function Skin:ApplyFrames(frames)
+    for _, v in ipairs(frames) do
+        local t = type(v)
+        if t == 'string' then
+            local frame = _G[v]
+            if frame then
+                self:Apply(frame)
+            end
+        elseif t == 'function' then
+            local ok, frame = pcall(v)
+            if ok and frame then
+                self:Apply(frame)
+            end
+        elseif t == 'table' and C_Widget.IsFrameWidget(v) then
+            self:Apply(v)
+        end
     end
 end
 
