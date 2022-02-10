@@ -90,13 +90,7 @@ ns.WHITE_COLOR = colorHex(HIGHLIGHT_FONT_COLOR)
 ns.RED_COLOR = colorHex(RED_FONT_COLOR)
 ns.GOLD_COLOR = colorHex(NORMAL_FONT_COLOR)
 
-local L = setmetatable({}, {
-    __index = function(t, k)
-        return k
-    end,
-})
-
-ns.L = L
+ns.L = LibStub('AceLocale-3.0'):GetLocale('tdTip')
 
 ns.POS_TYPE = { --
     System = 1,
@@ -138,7 +132,12 @@ ns.DATABASE = {
             reactionColor = {r = 0.2, g = 1, b = 1},
         },
 
+        showItemLevel = true,
         showItemLevelOnlyEquip = true,
+        showItemIcon = true,
+        showItemBorderColor = true,
+
+        showSpellIcon = true,
     },
 }
 

@@ -22,11 +22,13 @@ function Addon:LoadOptionFrame()
         return order
     end
 
+    local IGNORE_PATH_KEYS = {}
+
     local function get(paths)
         ---@type any
         local d = P
         for _, v in ipairs(paths) do
-            if v ~= 'general' then
+            if not IGNORE_PATH_KEYS[v] then
                 d = d[v]
             end
         end
@@ -42,7 +44,7 @@ function Addon:LoadOptionFrame()
         local n = #paths
         for i, v in ipairs(paths) do
             if i < n then
-                if v ~= 'general' then
+                if not IGNORE_PATH_KEYS[v] then
                     d = d[v]
                 end
             else
@@ -58,7 +60,7 @@ function Addon:LoadOptionFrame()
         self:SendMessage('TDTIP_SETTING_UPDATE')
     end
 
-    local function inline(name)
+    local function group(name)
         return function(args)
             return {type = 'group', name = name, inline = true, order = orderGen(), args = args}
         end
@@ -69,11 +71,11 @@ function Addon:LoadOptionFrame()
     end
 
     local function toggle(name)
-        return {type = 'toggle', name = name, order = orderGen()}
+        return {type = 'toggle', name = name, width = 'full', order = orderGen()}
     end
 
     local function range(name, min, max, step)
-        return {type = 'range', order = orderGen(), name = name, min = min, max = max, step = step}
+        return {type = 'range', order = orderGen(), width = 'full', name = name, min = min, max = max, step = step}
     end
 
     local function drop(name)
@@ -99,6 +101,21 @@ function Addon:LoadOptionFrame()
         end
     end
 
+    local function inline(key)
+        IGNORE_PATH_KEYS[key] = true
+        return key
+    end
+
+    local function treeTitle(name)
+        return {type = 'group', name = '|cffffd100' .. name .. '|r', order = orderGen(), args = {}, disabled = true}
+    end
+
+    local function treeItem(name)
+        return function(args)
+            return {type = 'group', name = '  |cffffffff' .. name .. '|r', order = orderGen(), args = args}
+        end
+    end
+
     local options = {
         type = 'group',
         name = 'tdTip ' .. GetAddOnMetadata('tdTip', 'Version'),
@@ -116,20 +133,56 @@ function Addon:LoadOptionFrame()
                 end,
             },
             line = {type = 'header', name = '', order = orderGen()},
-            general = inline(GENERAL) {
-                showPvpName = toggle(L['Show player title']),
-                showGuildRank = toggle(L['Show guild rank']),
-                showFactionIcon = toggle(L['Show faction icon']),
-                showClassIcon = toggle(L['Show class icon']),
-                showOffline = toggle(L['Show offline']),
-                showAFK = toggle(L['Show AFK']),
-                showDND = toggle(L['Show DND']),
 
-                classIconSize = range(L['Class icon size'], 10, 32, 1),
-                raidIconSize = range(L['Raid icon size'], 10, 128, 1),
+            unitTitle = treeTitle(L['Unit']),
+
+            [inline 'unitGeneral'] = treeItem(GENERAL) {
+                [inline 'features'] = group(L['Features']) {
+                    showPvpName = toggle(L['Show player title']),
+                    showGuildRank = toggle(L['Show guild rank']),
+                    showFactionIcon = toggle(L['Show faction icon']),
+                    showClassIcon = toggle(L['Show class icon']),
+                    showOffline = toggle(L['Show offline']),
+                    showAFK = toggle(L['Show AFK']),
+                    showDND = toggle(L['Show DND']),
+                },
+                [inline 'iconSize'] = group(L['Icon size']) {
+                    classIconSize = range(L['Class icon size'], 10, 32, 1),
+                    raidIconSize = range(L['Raid icon size'], 10, 128, 1),
+                },
             },
 
-            pos = inline(L['Position']) {
+            colors = treeItem(L['Text colors']) {
+                realmColor = rgb(L['Realm']),
+                guildColor = rgb(L['Guild']),
+                guildRankColor = rgb(L['Guild rank']),
+                friendColor = rgb(L['Friend']),
+                enemyColor = rgb(L['Enemy']),
+                reactionColor = rgb(L['Reaction']),
+                playerTitleColor = rgb(L['Player title']),
+                npcTitleColor = rgb(L['Npc title']),
+            },
+
+            bar = treeItem(L['Bar']) { --
+                height = range(L['Height'], 2, 50, 1),
+                padding = range(L['Padding'], -50, 50, 1),
+            },
+
+            itemTitle = treeTitle(L['Item']),
+            [inline 'item'] = treeItem(L['Item']) {
+                showItemLevel = toggle(L['Show item level']),
+                showItemLevelOnlyEquip = toggle(L['Show item level only on equipment']),
+                showItemIcon = toggle(L['Show item icon']),
+                showItemBorderColor = toggle(L['Set border color by item quality']),
+            },
+
+            spellTitle = treeTitle(L['Spell']),
+            [inline 'spell'] = treeItem(L['Spell']) { --
+                showSpellIcon = toggle(L['Show spell icon']),
+            },
+
+            posTitle = treeTitle(L['Position']),
+            pos = treeItem(L['Position']) {
                 type = drop(L['Type']) {
                     {name = L['System'], value = POS_TYPE.System}, --
                     {name = L['Cursor'], value = POS_TYPE.Cursor}, --
@@ -150,22 +203,6 @@ function Addon:LoadOptionFrame()
                         return P.pos.type ~= POS_TYPE.Custom
                     end,
                 },
-            },
-
-            bar = inline(L['Bar']) { --
-                height = range(L['Height'], 2, 50, 1),
-                padding = range(L['Padding'], -50, 50, 1),
-            },
-
-            colors = inline('Colors') {
-                guildColor = rgb(L['Guild Color']),
-                guildRankColor = rgb(L['Guild Rank Color']),
-                friendColor = rgb(L['Friend Color']),
-                enemyColor = rgb(L['Enemy Color']),
-                playerTitleColor = rgb(L['Player Title Color']),
-                realmColor = rgb(L['Realm Color']),
-                npcTitleColor = rgb(L['Npc Title Color']),
-                reactionColor = rgb(L['Reaction Color']),
             },
         },
     }

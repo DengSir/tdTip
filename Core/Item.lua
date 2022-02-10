@@ -166,15 +166,20 @@ function Item:OnTooltipSetItem(tip, item)
     tip:GetFontStringLeft(2):SetFontObject(nameLineNum == 2 and 'GameTooltipHeaderText' or 'GameTooltipText')
 
     local nameLine = tip:GetFontStringLeft(nameLineNum)
-    nameLine:SetFormattedText('|T%s:18|t %s', icon, nameLine:GetText())
 
-    if not P.showItemLevelOnlyEquip or equipLoc ~= '' then
+    if P.showItemIcon then
+        nameLine:SetFormattedText('|T%s:18|t %s', icon, nameLine:GetText())
+    end
+
+    if P.showItemLevel and (not P.showItemLevelOnlyEquip or equipLoc ~= '') then
         tip:AppendLineFrontLeft(nameLineNum + 1, format(S.ITEM_LEVEL, itemLevel))
     end
 
-    local r, g, b = GetItemQualityColor(quality)
-    if r then
-        tip:SetBackdropBorderColor(r, g, b)
+    if P.showItemBorderColor then
+        local r, g, b = GetItemQualityColor(quality)
+        if r then
+            tip:SetBackdropBorderColor(r, g, b)
+        end
     end
 
     tip:Show()

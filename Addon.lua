@@ -21,8 +21,8 @@ function Addon:OnInitialize()
 end
 
 function Addon:OnEnable()
-    self:OnProfileUpdate()
     self:RegisterMessage('TDTIP_SETTING_UPDATE', 'OnProfileUpdate')
+    self:OnProfileUpdate()
 end
 
 function Addon:OnProfileUpdate()
@@ -30,5 +30,11 @@ function Addon:OnProfileUpdate()
 
     for _, v in ipairs(ns.PROFILED_TABLES) do
         wipe(v)
+    end
+
+    if ns.P.showSpellIcon then
+        self:EnableModule('Spell')
+    else
+        self:DisableModule('Spell')
     end
 end

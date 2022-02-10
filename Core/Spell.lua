@@ -10,6 +10,7 @@ local LibTooltipExtra = LibStub('LibTooltipExtra-1.0')
 
 ---@class Spell: AceAddon-3.0, AceEvent-3.0, AceHook-3.0
 local Spell = ns.AddOn:NewModule('Spell', 'AceEvent-3.0', 'AceHook-3.0')
+Spell:Disable()
 
 function Spell:OnEnable()
     for _, name in ipairs(ns.Tooltips) do
