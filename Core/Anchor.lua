@@ -85,29 +85,23 @@ function Anchor:UpdateAnchor()
             end
         end
     else
-        local pos
-        if posType == POS_TYPE.System then
-            pos = self:GetSystemAnchor()
-        elseif posType == POS_TYPE.Custom then
-            pos = self:GetCustomAnchor()
-        end
-
+        local point, x, y = self:GetPointArgs()
         self.tip:ClearAllPoints()
-        self.tip:SetPoint(pos.point, UIParent, pos.point, pos.x, pos.y)
+        self.tip:SetPoint(point, UIParent, point, x, y)
     end
 end
 
-function Anchor:GetSystemAnchor()
-    return self:GetAnchor('BOTTOMRIGHT', -CONTAINER_OFFSET_X - 13, CONTAINER_OFFSET_Y)
+function Anchor:GetPointArgs()
+    local posType = P.pos.type
+    if posType == POS_TYPE.System then
+        return self:CalcPointArgs('BOTTOMRIGHT', -CONTAINER_OFFSET_X - 13, CONTAINER_OFFSET_Y)
+    elseif posType == POS_TYPE.Custom then
+        local pos = P.pos.custom
+        return self:CalcPointArgs(pos.point, pos.x, pos.y)
+    end
 end
 
-function Anchor:GetCustomAnchor()
-    local pos = P.pos.custom
-    return self:GetAnchor(pos.point, pos.x, pos.y)
-end
-
-local anchor = {}
-function Anchor:GetAnchor(point, x, y)
+function Anchor:CalcPointArgs(point, x, y)
     local margins = self.margins
     local atRight = point == 'BOTTOMRIGHT' or point == 'TOPRIGHT'
     local atTop = point == 'TOPLEFT' or point == 'TOPRIGHT'
@@ -124,8 +118,5 @@ function Anchor:GetAnchor(point, x, y)
         y = y + (margins.bottom or 0)
     end
 
-    anchor.point = point
-    anchor.x = x
-    anchor.y = y
-    return anchor
+    return point, x, y
 end
