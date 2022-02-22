@@ -47,7 +47,17 @@ local APIS = {
 }
 
 function Item:OnInitialize()
-    self.pendings = {}
+    self.rendered = {}
+    self.called = {}
+
+    self.handlers = setmetatable({}, {
+        __index = function(t, k)
+            t[k] = function(rawTip, ...)
+                return self:OnCall(rawTip, k, ...)
+            end
+            return rawget(t, k)
+        end,
+    })
 end
 
 function Item:OnEnable()
@@ -57,32 +67,11 @@ function Item:OnEnable()
             self:HookTip(rawTip)
         end
     end
-
-    self:RegisterEvent('GET_ITEM_INFO_RECEIVED')
 end
 
 function Item:OnDisable()
-    wipe(self.pendings)
-end
-
-function Item:GET_ITEM_INFO_RECEIVED(_, itemId, ok)
-    if not ok then
-        return
-    end
-
-    local pendings = self.pendings[itemId]
-    if not pendings then
-        return
-    end
-
-    C_Timer.After(0.05, function()
-        self.pendings[itemId] = nil
-
-        for tip, info in pairs(pendings) do
-            tip:ClearLines()
-            tip[info.method](tip, unpack(info.args, 1, info.argsCount))
-        end
-    end)
+    wipe(self.rendered)
+    wipe(self.called)
 end
 
 function Item:HookTip(rawTip)
@@ -95,11 +84,13 @@ function Item:HookTip(rawTip)
         end
 
         if rawTip[api] then
-            self:SecureHook(rawTip, api, function(t, ...)
-                return self:OnCall(t, api, ...)
-            end)
+            self:SecureHook(rawTip, api, self.handlers[api])
         end
     end
+
+    self:HookScript(rawTip, 'OnTooltipCleared')
+    self:HookScript(rawTip, 'OnTooltipSetItem')
+    self:HookScript(rawTip, 'OnHide', 'OnTooltipHide')
 
     do
         local tip = LibTooltipExtra:New(rawTip)
@@ -127,12 +118,38 @@ function Item:HookTip(rawTip)
     end
 end
 
+function Item:OnTooltipCleared(rawTip)
+    self.rendered[rawTip] = nil
+end
+
+function Item:OnTooltipHide(rawTip)
+    self.called[rawTip] = nil
+end
+
+function Item:OnTooltipSetItem(rawTip)
+    if self.rendered[rawTip] then
+        return
+    end
+
+    if not self.called[rawTip] then
+        return
+    end
+
+    local callInfo = self.called[rawTip]
+
+    self:OnCall(rawTip, callInfo.method, unpack(callInfo.args, 1, callInfo.argsCount))
+end
+
 function Item:OnCompareItem(tip1, tip2)
     self:OnCall(tip1, 'SetHyperlink', select(2, tip1:GetItem()))
     self:OnCall(tip2, 'SetHyperlink', select(2, tip2:GetItem()))
 end
 
 function Item:OnCall(rawTip, method, ...)
+    if self.rendered[rawTip] then
+        return
+    end
+
     local link
     if APIS[method] then
         link = APIS[method](...)
@@ -144,18 +161,16 @@ function Item:OnCall(rawTip, method, ...)
         return
     end
 
-    local itemId = self:OnTooltipSetItem(LibTooltipExtra:New(rawTip), link)
-    if not itemId then
-        return
-    end
+    self.called[rawTip] = {method = method, argsCount = select('#', ...), args = {...}}
 
-    self.pendings[itemId] = self.pendings[itemId] or {}
-    self.pendings[itemId][rawTip] = {method = method, argsCount = select('#', ...), args = {...}}
+    self:OnItem(LibTooltipExtra:New(rawTip), link)
+
+    self.rendered[rawTip] = true
 end
 
 ---@param tip LibGameTooltip
 ---@param item string
-function Item:OnTooltipSetItem(tip, item)
+function Item:OnItem(tip, item)
     local name, _, quality, itemLevel, _, _, _, _, equipLoc, icon = GetItemInfo(item)
     if not name then
         return tonumber(item) or GetItemInfoFromHyperlink(item)
