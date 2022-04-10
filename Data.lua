@@ -20,6 +20,9 @@ do
         __index = function(_, k)
             return profile[k]
         end,
+        __newindex = function(t, k, v)
+            profile[k] = v
+        end,
         __call = function(_, p)
             profile = p
         end,
