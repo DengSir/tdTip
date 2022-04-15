@@ -145,6 +145,7 @@ function Addon:LoadOptionFrame()
                     showOffline = toggle(L['Show offline']),
                     showAFK = toggle(L['Show AFK']),
                     showDND = toggle(L['Show DND']),
+                    showTargetBy = toggle(L['Show Targeted By']),
                 },
                 [inline 'iconSize'] = group(L['Icon size']) {
                     classIconSize = range(L['Class icon size'], 10, 32, 1),
