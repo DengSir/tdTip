@@ -6,6 +6,7 @@
 ---@type ns
 local ns = select(2, ...)
 
+local L = ns.L
 local strcolor = ns.strcolor
 local strjoin = ns.strjoin
 
@@ -209,6 +210,10 @@ function Unit:UpdateInfo(unit)
         if P.showDND and UnitIsDND(unit) then
             info.dnd = S.DND
         end
+
+        if P.showTargetBy then
+            self:AddTargetBy(info)
+        end
     else
         info.reactionColor = FACTION_BAR_COLORS[info.reaction]
         info.type = strcolor(info.type, info.reactionColor)
@@ -232,6 +237,30 @@ function Unit:UpdateInfo(unit)
     local bottom = not info.isDead and P.bar.padding + P.bar.height - 5 or nil
 
     ns.Anchor:SetMargins(nil, right, nil, bottom)
+end
+
+function Unit:AddTargetBy(info)
+    local numGroup = GetNumGroupMembers()
+    if not numGroup or numGroup <= 1 then
+        return
+    end
+
+    local inRaid = IsInRaid()
+    local targeted = {}
+    for i = 1, numGroup do
+        local unit = inRaid and 'raid' .. i or 'party' .. i
+        if UnitIsUnit(unit .. 'target', info.unit) then
+            local _, classFile = UnitClass(unit)
+            local color = RAID_CLASS_COLORS[classFile]
+            local name = strcolor(UnitName(unit), color)
+            table.insert(targeted, name)
+        end
+    end
+
+    if #targeted > 0 then
+        info.targetedBy = string.format(L['Targeted By (|cffffffff%d|r): %s'], #targeted,
+                                        table.concat(targeted, ', ', 1, math.min(3, #targeted)))
+    end
 end
 
 function Unit:GetEmptyLine()
@@ -347,6 +376,13 @@ function Unit:UpdateTarget(first)
         self.tip:GetFontStringLeft(lines.target):SetText(target)
     elseif lines.target then
         self.tip:GetFontStringLeft(lines.target):SetText()
+    end
+
+    if self.info.targetedBy then
+        lines.targetedBy = lines.targetedBy or self:GetEmptyLine()
+        self.tip:GetFontStringLeft(lines.targetedBy):SetText(self.info.targetedBy)
+    elseif lines.targetedBy then
+        self.tip:GetFontStringLeft(lines.targetedBy):SetText()
     end
     self.tip:Show()
 end

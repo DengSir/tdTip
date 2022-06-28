@@ -111,6 +111,7 @@ ns.DATABASE = {
         showDND = true,
         showFactionIcon = true,
         showClassIcon = true,
+        showTargetBy = true,
 
         classIconSize = 18,
         raidIconSize = 32,
