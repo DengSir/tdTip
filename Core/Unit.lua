@@ -223,7 +223,7 @@ function Unit:UpdateInfo(unit)
             info.reactionName = S.REACTIONS[info.reaction]
         end
 
-        if lines.level > 2 then
+        if lines.level and lines.level > 2 then
             info.title = F.NpcTitle:format(self.tip:GetFontStringLeft(2):GetText())
         end
     end
@@ -274,6 +274,9 @@ function Unit:UpdateNpcTitleLine()
 end
 
 function Unit:UpdateLevelLine()
+    if not self.lines.level then
+        return
+    end
     local info = self.info
     local text = strjoin(info.level, info.race, info.class, info.type, info.classification, info.reactionName,
                          info.dead, info.offline, info.afk, info.dnd)
