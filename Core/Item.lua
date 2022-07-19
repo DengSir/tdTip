@@ -120,6 +120,7 @@ end
 
 function Item:OnTooltipCleared(rawTip)
     self.rendered[rawTip] = nil
+    rawTip:SetBackdropBorderColor(1, 1, 1)
 end
 
 function Item:OnTooltipHide(rawTip)
