@@ -198,5 +198,9 @@ function Item:OnItem(tip, item)
         end
     end
 
+    if ns.InDevMode() then
+        tip:AddLine('|cff00ffffItem ID: |r' .. GetItemInfoInstant(item), 1, 1, 1)
+    end
+
     tip:Show()
 end

@@ -53,9 +53,11 @@ function Unit:OnEnable()
     self:HookScript(self.tip, 'OnTooltipSetUnit')
     self:HookScript(self.tip, 'OnTooltipCleared')
 
+    self:HookScript(self.bar, 'OnShow', 'OnBarShow')
+    self:HookScript(self.bar, 'OnHide', 'OnBarHide')
+
     self:RegisterMessage('TDTIP_SETTING_UPDATE', 'OnSettingUpdate')
 
-    self.bar.lockColor = true
     self.bar:SetStatusBarTexture([[Interface\AddOns\tdTip\Media\StatusBar]])
 
     self.bar.bg = self.bar:CreateTexture(nil, 'BACKGROUND')
@@ -73,6 +75,19 @@ function Unit:OnSettingUpdate()
 
     local size = P.raidIconSize
     self.raidIcon:SetSize(size, size)
+end
+
+function Unit:OnBarShow()
+    if self.tip:GetUnit() then
+        return
+    end
+
+    self.bar.lockColor = nil
+    ns.Anchor:SetMargins(nil, nil, nil, P.bar.padding + P.bar.height - 5)
+end
+
+function Unit:OnBarHide()
+    self.bar.lockColor = nil
 end
 
 function Unit:OnTooltipCleared()
@@ -332,6 +347,7 @@ function Unit:UpdateStatusBar()
     if info.isDead then
         self.bar:Hide()
     else
+        self.bar.lockColor = true
         self.bar:Show()
         self:OnBarValueChanged(self.bar, self.bar:GetValue())
     end

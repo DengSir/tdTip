@@ -155,3 +155,14 @@ function ns.profiled(get)
         end,
     })
 end
+
+local frames = {'tdDevToolsFrame', 'WeakAurasOptions'}
+
+function ns.InDevMode()
+    for _, v in ipairs(frames) do
+        local f = _G[v]
+        if f and f:IsVisible() then
+            return true
+        end
+    end
+end

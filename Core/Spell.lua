@@ -18,6 +18,7 @@ function Spell:OnEnable()
         local rawTip = _G[name]
         if rawTip then
             self:HookScript(rawTip, 'OnTooltipSetSpell')
+            self:SecureHook(rawTip, 'SetUnitAura')
         end
     end
 end
@@ -50,6 +51,30 @@ function Spell:OnTooltipSetSpell(rawTip)
                 fontString:SetTextColor(GRAY_FONT_COLOR:GetRGB())
                 fontString:Show()
             end
+        end
+    end
+
+    if ns.InDevMode() then
+        tip:AddLine('|cff00ffffSpell ID:|r ' .. spellId, 1, 1, 1)
+    end
+
+    tip:Show()
+end
+
+function Spell:SetUnitAura(rawTip, unit, index, filter)
+    local _, _, _, _, _, _, source, _, _, spellId = UnitAura(unit, index, filter)
+
+    local tip = LibTooltipExtra:New(rawTip)
+
+    if source then
+        local name = ns.strcolor(UnitName(source), ns.UnitColor(source))
+
+        tip:AddLine('|cff00ffffFrom:|r ' .. name)
+    end
+
+    if ns.InDevMode() or true then
+        if spellId then
+            tip:AddLine('|cff00ffffSpell ID:|r ' .. spellId, 1, 1, 1)
         end
     end
 
