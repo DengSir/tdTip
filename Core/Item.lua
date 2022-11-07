@@ -92,6 +92,7 @@ function Item:HookTip(rawTip)
     self:HookScript(rawTip, 'OnTooltipSetItem')
     self:HookScript(rawTip, 'OnHide', 'OnTooltipHide')
     self:SecureHook(rawTip, 'SetOwner', 'OnTooltipHide')
+    self:RawHookScript(rawTip, 'OnTooltipAddMoney')
 
     do
         local tip = LibTooltipExtra:New(rawTip)
@@ -200,7 +201,7 @@ function Item:OnItem(tip, item)
     end
 
     if ns.InDevMode() then
-        tip:AddLine(' ')
+        tip:AddEmptyLine()
         tip:AddLine('|cff00ffffItem ID: |r' .. GetItemInfoInstant(item), 1, 1, 1)
         tip:AddLine('|cff00ffffItem Icon: |r' .. icon, 1, 1, 1)
         tip:AddLine('|cff00ffffItem Class: |r' .. itemClass .. '-' .. itemSubClass, 1, 1, 1)
@@ -212,4 +213,10 @@ function Item:OnItem(tip, item)
     end
 
     tip:Show()
+end
+
+function Item:OnTooltipAddMoney(tip, ...)
+    if MerchantFrame:IsShown() then
+        self.hooks[tip].OnTooltipAddMoney(tip, ...)
+    end
 end
