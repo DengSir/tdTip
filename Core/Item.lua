@@ -92,7 +92,6 @@ function Item:HookTip(rawTip)
     self:HookScript(rawTip, 'OnTooltipSetItem')
     self:HookScript(rawTip, 'OnHide', 'OnTooltipHide')
     self:SecureHook(rawTip, 'SetOwner', 'OnTooltipHide')
-    self:RawHookScript(rawTip, 'OnTooltipAddMoney')
 
     do
         local tip = LibTooltipExtra:New(rawTip)
@@ -213,10 +212,4 @@ function Item:OnItem(tip, item)
     end
 
     tip:Show()
-end
-
-function Item:OnTooltipAddMoney(tip, ...)
-    if MerchantFrame:IsShown() then
-        self.hooks[tip].OnTooltipAddMoney(tip, ...)
-    end
 end
