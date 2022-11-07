@@ -166,7 +166,8 @@ function Addon:LoadOptionFrame()
 
             bar = treeItem(L['Bar']) { --
                 height = range(L['Height'], 2, 50, 1),
-                padding = range(L['Padding'], -50, 50, 1),
+                paddingX = range(L['Padding X'], -50, 50, 1),
+                paddingY = range(L['Padding Y'], -50, 50, 1),
             },
 
             itemTitle = treeTitle(L['Item']),

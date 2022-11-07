@@ -91,6 +91,7 @@ function Item:HookTip(rawTip)
     self:HookScript(rawTip, 'OnTooltipCleared')
     self:HookScript(rawTip, 'OnTooltipSetItem')
     self:HookScript(rawTip, 'OnHide', 'OnTooltipHide')
+    self:SecureHook(rawTip, 'SetOwner', 'OnTooltipHide')
 
     do
         local tip = LibTooltipExtra:New(rawTip)
@@ -172,7 +173,7 @@ end
 ---@param tip LibGameTooltip
 ---@param item string
 function Item:OnItem(tip, item)
-    local name, _, quality, itemLevel, _, _, _, _, equipLoc, icon = GetItemInfo(item)
+    local name, _, quality, itemLevel, _, itemClass, itemSubClass, _, equipLoc, icon = GetItemInfo(item)
     if not name then
         return tonumber(item) or GetItemInfoFromHyperlink(item)
     end
@@ -199,7 +200,15 @@ function Item:OnItem(tip, item)
     end
 
     if ns.InDevMode() then
+        tip:AddLine(' ')
         tip:AddLine('|cff00ffffItem ID: |r' .. GetItemInfoInstant(item), 1, 1, 1)
+        tip:AddLine('|cff00ffffItem Icon: |r' .. icon, 1, 1, 1)
+        tip:AddLine('|cff00ffffItem Class: |r' .. itemClass .. '-' .. itemSubClass, 1, 1, 1)
+
+        local itemSpell, spellId = GetItemSpell(item)
+        if itemSpell then
+            tip:AddLine('|cff00ffffItem Spell: |r' .. itemSpell .. '-' .. spellId, 1, 1, 1)
+        end
     end
 
     tip:Show()

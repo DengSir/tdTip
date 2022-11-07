@@ -19,6 +19,8 @@ function Spell:OnEnable()
         if rawTip then
             self:HookScript(rawTip, 'OnTooltipSetSpell')
             self:SecureHook(rawTip, 'SetUnitAura')
+            self:SecureHook(rawTip, 'SetUnitBuff')
+            self:SecureHook(rawTip, 'SetUnitDebuff')
         end
     end
 end
@@ -54,29 +56,42 @@ function Spell:OnTooltipSetSpell(rawTip)
         end
     end
 
-    if ns.InDevMode() then
-        tip:AddLine('|cff00ffffSpell ID:|r ' .. spellId, 1, 1, 1)
-    end
+    self:OnTooltipSpell(tip, spellId)
 
     tip:Show()
 end
 
-function Spell:SetUnitAura(rawTip, unit, index, filter)
-    local _, _, _, _, _, _, source, _, _, spellId = UnitAura(unit, index, filter)
+function Spell:SetUnitAura(rawTip, ...)
+    self:OnTooltipAura(LibTooltipExtra:New(rawTip), true, UnitAura(...))
+end
 
-    local tip = LibTooltipExtra:New(rawTip)
+function Spell:SetUnitBuff(rawTip, ...)
+    self:OnTooltipAura(LibTooltipExtra:New(rawTip), false, UnitBuff(...))
+end
 
+function Spell:SetUnitDebuff(rawTip, ...)
+    self:OnTooltipAura(LibTooltipExtra:New(rawTip), false, UnitDebuff(...))
+end
+
+function Spell:OnTooltipAura(tip, hasSource, ...)
+    local _, _, _, _, _, _, source, _, _, spellId = ...
     if source then
         local name = ns.strcolor(UnitName(source), ns.UnitColor(source))
 
         tip:AddLine('|cff00ffffFrom:|r ' .. name)
     end
 
-    if ns.InDevMode() or true then
-        if spellId then
-            tip:AddLine('|cff00ffffSpell ID:|r ' .. spellId, 1, 1, 1)
-        end
-    end
+    self:OnTooltipSpell(tip, spellId)
 
     tip:Show()
+end
+
+function Spell:OnTooltipSpell(tip, spellId)
+    if ns.InDevMode() then
+        if spellId then
+            local _, _, icon = GetSpellInfo(spellId)
+            tip:AddLine('|cff00ffffSpell ID:|r ' .. spellId, 1, 1, 1)
+            tip:AddLine('|cff00ffffSpell Icon:|r ' .. icon, 1, 1, 1)
+        end
+    end
 end

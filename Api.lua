@@ -118,7 +118,7 @@ ns.DATABASE = {
 
         pos = {type = ns.POS_TYPE.System, custom = ns.DEFAULT_CUSTOM_POSITION},
 
-        bar = {height = 4, padding = 9},
+        bar = {height = 4, paddingX = 9, paddingY = 9},
 
         ---@class DATABASE.profile.colors
         colors = {
@@ -156,7 +156,7 @@ function ns.profiled(get)
     })
 end
 
-local frames = {'tdDevToolsFrame', 'WeakAurasOptions'}
+local frames = {'tdDevToolsFrame', 'WeakAurasOptions', 'tdPack2RuleOptionFrame'}
 
 function ns.InDevMode()
     for _, v in ipairs(frames) do

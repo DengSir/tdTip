@@ -67,11 +67,19 @@ function Unit:OnEnable()
 end
 
 function Unit:OnSettingUpdate()
-    local padding = P.bar.padding
+    local x = P.bar.paddingX
+    local y = P.bar.paddingY
+
     self.bar:SetHeight(P.bar.height)
     self.bar:ClearAllPoints()
-    self.bar:SetPoint('BOTTOMLEFT', GameTooltip.NineSlice, 'BOTTOMLEFT', padding, padding)
-    self.bar:SetPoint('BOTTOMRIGHT', GameTooltip.NineSlice, 'BOTTOMRIGHT', -padding, padding)
+
+    if y >= 0 then
+        self.bar:SetPoint('BOTTOMLEFT', GameTooltip.NineSlice, 'BOTTOMLEFT', x, y)
+        self.bar:SetPoint('BOTTOMRIGHT', GameTooltip.NineSlice, 'BOTTOMRIGHT', -x, y)
+    else
+        self.bar:SetPoint('TOPLEFT', GameTooltip.NineSlice, 'BOTTOMLEFT', x, y)
+        self.bar:SetPoint('TOPRIGHT', GameTooltip.NineSlice, 'BOTTOMRIGHT', -x, y)
+    end
 
     local size = P.raidIconSize
     self.raidIcon:SetSize(size, size)
@@ -83,7 +91,12 @@ function Unit:OnBarShow()
     end
 
     self.bar.lockColor = nil
-    ns.Anchor:SetMargins(nil, nil, nil, P.bar.padding + P.bar.height - 5)
+
+    local bottom
+    if P.bar.paddingY >= 0 then
+        bottom = P.bar.paddingY + P.bar.height - 5
+    end
+    ns.Anchor:SetMargins(nil, nil, nil, bottom)
 end
 
 function Unit:OnBarHide()
@@ -249,7 +262,12 @@ function Unit:UpdateInfo(unit)
     end
 
     local right = P.showFactionIcon and info.factionFileName and 52 or nil
-    local bottom = not info.isDead and P.bar.padding + P.bar.height - 5 or nil
+    local bottom
+    if not info.isDead then
+        if P.bar.paddingY >= 0 then
+            bottom = P.bar.paddingY + P.bar.height - 5
+        end
+    end
 
     ns.Anchor:SetMargins(nil, right, nil, bottom)
 end
