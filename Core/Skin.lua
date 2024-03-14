@@ -64,7 +64,7 @@ function Skin:Apply(frame)
         mask:SetPoint('TOPLEFT', 3, -3)
         mask:SetPoint('BOTTOMRIGHT', parent, 'TOPRIGHT', -3, -32)
         mask:SetBlendMode('ADD')
-        mask:SetGradientAlpha('VERTICAL', 0, 0, 0, 0, 0.9, 0.9, 0.9, 0.4)
+        mask:SetGradient('VERTICAL', CreateColor(0, 0, 0, 0), CreateColor(0.9, 0.9, 0.9, 0.4))
 
         self.masks[frame] = mask
     end
