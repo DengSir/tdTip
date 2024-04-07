@@ -173,7 +173,7 @@ end
 ---@param tip LibGameTooltip
 ---@param item string
 function Item:OnItem(tip, item)
-    local name, _, quality, itemLevel, _, itemClass, itemSubClass, _, equipLoc, icon = GetItemInfo(item)
+    local name, _, quality, itemLevel, _, itemClass, itemSubClass, _, equipLoc, icon = C_Item.GetItemInfo(item)
     if not name then
         return tonumber(item) or GetItemInfoFromHyperlink(item)
     end
@@ -188,7 +188,7 @@ function Item:OnItem(tip, item)
         nameLine:SetFormattedText('|T%s:18|t %s', icon, nameLine:GetText())
     end
 
-    if P.showItemLevel and (not P.showItemLevelOnlyEquip or equipLoc ~= '') then
+    if P.showItemLevel and (not P.showItemLevelOnlyEquip or (C_Item.IsEquippableItem(item))) then
         tip:AppendLineFrontLeft(nameLineNum + 1, format(S.ITEM_LEVEL, itemLevel))
     end
 
