@@ -209,9 +209,5 @@ function Addon:LoadOptionFrame()
         },
     }
 
-    local AceConfigRegistry = LibStub('AceConfigRegistry-3.0')
-    local AceConfigDialog = LibStub('AceConfigDialog-3.0')
-
-    AceConfigRegistry:RegisterOptionsTable('tdTip', options)
-    AceConfigDialog:AddToBlizOptions('tdTip', 'tdTip')
+    LibStub('tdOptions'):Register('tdTip', options)
 end

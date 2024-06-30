@@ -6,6 +6,9 @@
 ---@class ns
 local ns = select(2, ...)
 
+local GetItemInfo = GetItemInfo or C_Item.GetItemInfo
+local IsEquippableItem = IsEquippableItem or C_Item.IsEquippableItem
+
 local S, P = ns.S, ns.P
 
 local LibTooltipExtra = LibStub('LibTooltipExtra-1.0')
@@ -121,7 +124,7 @@ end
 
 function Item:OnTooltipCleared(rawTip)
     self.rendered[rawTip] = nil
-    rawTip:SetBackdropBorderColor(1, 1, 1)
+    LibTooltipExtra:New(rawTip):SetBorderColor(1, 1, 1)
 end
 
 function Item:OnTooltipHide(rawTip)
@@ -173,7 +176,7 @@ end
 ---@param tip LibGameTooltip
 ---@param item string
 function Item:OnItem(tip, item)
-    local name, _, quality, itemLevel, _, itemClass, itemSubClass, _, equipLoc, icon = C_Item.GetItemInfo(item)
+    local name, _, quality, itemLevel, _, itemClass, itemSubClass, _, equipLoc, icon = GetItemInfo(item)
     if not name then
         return tonumber(item) or GetItemInfoFromHyperlink(item)
     end
@@ -188,14 +191,14 @@ function Item:OnItem(tip, item)
         nameLine:SetFormattedText('|T%s:18|t %s', icon, nameLine:GetText())
     end
 
-    if P.showItemLevel and (not P.showItemLevelOnlyEquip or (C_Item.IsEquippableItem(item))) then
+    if P.showItemLevel and (not P.showItemLevelOnlyEquip or (IsEquippableItem(item))) then
         tip:AppendLineFrontLeft(nameLineNum + 1, format(S.ITEM_LEVEL, itemLevel))
     end
 
     if P.showItemBorderColor then
         local r, g, b = GetItemQualityColor(quality)
         if r then
-            tip:SetBackdropBorderColor(r, g, b)
+            tip:SetBorderColor(r, g, b)
         end
     end
 
