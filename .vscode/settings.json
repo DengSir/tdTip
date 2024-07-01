@@ -2,5 +2,30 @@
     "Lua.diagnostics.disable": [
         "redundant-parameter"
     ],
-    "Lua.runtime.version": "Lua 5.1"
+    "Lua.runtime.version": "Lua 5.1",
+    "Lua.diagnostics.globals": [
+        "CONTAINER_OFFSET_Y",
+        "CONTAINER_OFFSET_X",
+        "CURRENTLY_EQUIPPED",
+        "UIDROPDOWNMENU_MAXLEVELS",
+        "GRAY_FONT_COLOR",
+        "PVP",
+        "PLAYER_OFFLINE",
+        "FACTION_HORDE",
+        "FACTION_ALLIANCE",
+        "GameTooltipStatusBar",
+        "FACTION_BAR_COLORS",
+        "LEVEL",
+        "SELECTED_CHAT_FRAME",
+        "DEFAULT_CHAT_FRAME",
+        "NORMAL_FONT_COLOR",
+        "ACCEPT",
+        "CANCEL",
+        "CLOSE",
+        "FONT_COLOR_CODE_CLOSE",
+        "OpacitySliderFrame",
+        "OKAY",
+        "NOT_BOUND",
+        "GENERAL"
+    ]
 }
