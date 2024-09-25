@@ -22,7 +22,7 @@ local CLEAR_LINES = { --
 ---@type LibTooltipExtra-1.0
 local LibTooltipExtra = LibStub('LibTooltipExtra-1.0')
 
----@class Unit: AceAddon-3.0, AceHook-3.0, AceTimer-3.0, AceEvent-3.0
+---@class Unit: AceModule, AceHook-3.0, AceTimer-3.0, AceEvent-3.0
 local Unit = ns.AddOn:NewModule('Unit', 'AceHook-3.0', 'AceTimer-3.0', 'AceEvent-3.0')
 
 function Unit:OnInitialize()
@@ -61,7 +61,7 @@ function Unit:OnEnable()
     self.bar:SetStatusBarTexture([[Interface\AddOns\tdTip\Media\StatusBar]])
 
     self.bar.bg = self.bar:CreateTexture(nil, 'BACKGROUND')
-    self.bar.bg:SetAllPoints(true)
+    self.bar.bg:SetAllPoints(self.bar)
     self.bar.bg:SetTexture([[Interface\AddOns\tdTip\Media\StatusBar]])
     self.bar.bg:SetVertexColor(1, 1, 1, 0.2)
 end

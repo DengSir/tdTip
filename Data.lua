@@ -50,6 +50,7 @@ do
     ns.F = F
 end
 
+---@class Strings
 ns.S = { --
     DEAD = strcolor(DEAD, ns.RED_COLOR),
     OFFLINE = strcolor(PLAYER_OFFLINE, ns.GRAY_COLOR),
@@ -74,6 +75,7 @@ ns.S = { --
     ITEM_LEVEL = NORMAL_FONT_COLOR_CODE .. ITEM_LEVEL_PLUS:gsub(' *%%d%+$', ' %%d') .. '|r',
 }
 
+---@class Icons
 ns.O = {
     Raid = setmetatable({}, {
         __index = function(t, k)

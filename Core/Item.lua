@@ -13,7 +13,7 @@ local S, P = ns.S, ns.P
 
 local LibTooltipExtra = LibStub('LibTooltipExtra-1.0')
 
----@class Item: AceAddon-3.0, AceEvent-3.0, AceHook-3.0
+---@class Item: AceModule, AceEvent-3.0, AceHook-3.0
 local Item = ns.AddOn:NewModule('Item', 'AceEvent-3.0', 'AceHook-3.0')
 
 local APIS = {

@@ -6,7 +6,7 @@
 ---@type ns
 local ns = select(2, ...)
 
----@class Skin: AceAddon-3.0, AceEvent-3.0, AceHook-3.0
+---@class Skin: AceModule, AceEvent-3.0, AceHook-3.0
 local Skin = ns.AddOn:NewModule('Skin', 'AceEvent-3.0', 'AceHook-3.0')
 
 function Skin:OnInitialize()

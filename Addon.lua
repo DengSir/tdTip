@@ -6,12 +6,12 @@
 ---@class ns
 local ns = select(2, ...)
 
----@class Addon: AceAddon-3.0, AceEvent-3.0, LibClass-2.0
+---@class Addon: AceAddon, AceEvent-3.0, LibClass-2.0
 local Addon = LibStub('AceAddon-3.0'):NewAddon('tdTip', 'AceEvent-3.0', 'LibClass-2.0')
 ns.AddOn = Addon
 
 function Addon:OnInitialize()
-    ---@class db: AceDB-3.0, DATABASE
+    ---@class db: AceDBObject-3.0, DATABASE
     self.db = LibStub('AceDB-3.0'):New('TDDB_TIP', ns.DATABASE, true)
 
     self.db.RegisterCallback(self, 'OnProfileChanged', 'OnProfileUpdate')

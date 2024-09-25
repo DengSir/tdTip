@@ -100,7 +100,7 @@ ns.POS_TYPE = { --
 
 ns.DEFAULT_CUSTOM_POSITION = {point = 'BOTTOMRIGHT', x = -300, y = 200}
 
----@class DATABASE
+---@class DATABASE: AceDB.Schema
 ns.DATABASE = {
     ---@class DATABASE.profile
     profile = { --

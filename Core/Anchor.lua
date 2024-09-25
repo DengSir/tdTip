@@ -9,7 +9,7 @@ local ns = select(2, ...)
 local P = ns.P
 local POS_TYPE = ns.POS_TYPE
 
----@class Anchor: AceAddon-3.0, AceHook-3.0, AceEvent-3.0
+---@class Anchor: AceModule, AceHook-3.0, AceEvent-3.0
 local Anchor = ns.AddOn:NewModule('Anchor', 'AceHook-3.0', 'AceEvent-3.0')
 ns.Anchor = Anchor
 
