@@ -38,8 +38,9 @@ function Spell:OnTooltipSetSpell(rawTip)
         if icon then
             local fontString = tip:GetFontStringLeft(1)
             local text = fontString:GetText()
-
-            fontString:SetFormattedText('|T%s:18:18|t %s', icon, text)
+            if text then
+                fontString:SetFormattedText('|T%s:18:18|t %s', icon, text)
+            end
         end
     end
 
