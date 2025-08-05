@@ -33,7 +33,6 @@ local APIS = {
     'SetSendMailItem',
     'SetHyperlink',
     'SetTradeSkillItem',
-    'SetAction',
     'SetItemByID',
     'SetMerchantCostItem',
     'SetGuildBankItem',
@@ -46,6 +45,16 @@ local APIS = {
         else
             return GetCraftReagentItemLink(index, slot)
         end
+    end,
+    SetAction = function(action)
+        local actionType, id = GetActionInfo(action)
+        local link, _
+        if actionType == 'item' then
+            _, link = GetItemInfo(id)
+        elseif actionType == 'macro' then
+            _, link = GetMacroItem(id)
+        end
+        return link
     end,
 }
 
