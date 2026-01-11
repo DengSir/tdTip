@@ -39,6 +39,8 @@ local APIS = {
     'SetExistingSocketGem',
     'SetSocketGem',
     'SetSocketedItem',
+    'SetToyByItemID',
+    'SetHeirloomByItemID',
     SetCraftItem = function(index, slot)
         if not slot then
             return GetCraftItemLink(index)
