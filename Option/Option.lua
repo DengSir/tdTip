@@ -118,7 +118,7 @@ function Addon:LoadOptionFrame()
 
     local options = {
         type = 'group',
-        name = 'tdTip ' .. GetAddOnMetadata('tdTip', 'Version'),
+        name = 'tdTip ' .. C_AddOns.GetAddOnMetadata('tdTip', 'Version'),
         get = get,
         set = set,
         args = {
