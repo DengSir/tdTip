@@ -103,7 +103,7 @@ ns.C = ns.profiled(function(k)
     return colorHex(P.colors[k])
 end)
 
-ns.Tooltips = {'GameTooltip', 'ItemRefTooltip', 'WorldMapTooltip'}
+ns.Tooltips = {'GameTooltip', 'ItemRefTooltip', 'WorldMapTooltip', 'tdDevToolsItemTip'}
 
 ns.Frames = {
     'LibDBIconTooltip', 'AceGUITooltip', 'AceConfigDialogTooltip', 'FriendsTooltip', 'ChatMenu', 'EmoteMenu',

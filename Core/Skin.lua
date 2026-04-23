@@ -55,6 +55,9 @@ function Skin:ApplyFrames(frames)
 end
 
 function Skin:Apply(frame)
+    if frame.IsEmbedded then
+        return
+    end
     local mask = self.masks[frame]
     if not mask then
         local parent = frame.NineSlice or frame

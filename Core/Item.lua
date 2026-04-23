@@ -107,7 +107,7 @@ function Item:HookTip(rawTip)
     self:HookScript(rawTip, 'OnHide', 'OnTooltipHide')
     self:SecureHook(rawTip, 'SetOwner', 'OnTooltipHide')
 
-    do
+    if not rawTip.IsEmbedded then
         local tip = LibTooltipExtra:New(rawTip)
         tip:GetFontStringLeft(1):SetFontObject('GameTooltipHeaderText')
         tip:GetFontStringRight(1):SetFontObject('GameTooltipHeaderText')
@@ -194,7 +194,9 @@ function Item:OnItem(tip, item)
 
     local nameLineNum = tip:GetFontStringLeft(1):GetText() == CURRENTLY_EQUIPPED and 2 or 1
 
-    tip:GetFontStringLeft(2):SetFontObject(nameLineNum == 2 and 'GameTooltipHeaderText' or 'GameTooltipText')
+    if not tip.IsEmbedded then
+        tip:GetFontStringLeft(2):SetFontObject(nameLineNum == 2 and 'GameTooltipHeaderText' or 'GameTooltipText')
+    end
 
     local nameLine = tip:GetFontStringLeft(nameLineNum)
 
