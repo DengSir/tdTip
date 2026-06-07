@@ -61,6 +61,7 @@ local APIS = {
 }
 
 function Item:OnInitialize()
+    self.hooked = {}
     self.rendered = {}
     self.called = {}
 
@@ -89,6 +90,12 @@ function Item:OnDisable()
 end
 
 function Item:HookTip(rawTip)
+    if self.hooked[rawTip] then
+        return false
+    end
+
+    self.hooked[rawTip] = true
+
     for k, v in pairs(APIS) do
         local api
         if type(k) == 'number' then
@@ -115,22 +122,25 @@ function Item:HookTip(rawTip)
 
     if rawTip.shoppingTooltips then
         for _, shoppingTip in ipairs(rawTip.shoppingTooltips) do
-            self:SecureHook(shoppingTip, 'SetCompareItem', 'OnCompareItem')
-            self:HookTip(shoppingTip)
+            if self:HookTip(shoppingTip) then
+                self:SecureHook(shoppingTip, 'SetCompareItem', 'OnCompareItem')
 
-            local tip = LibTooltipExtra:New(shoppingTip)
-            tip:GetFontStringLeft(2):SetFontObject('GameTooltipHeaderText')
-            tip:GetFontStringRight(2):SetFontObject('GameTooltipHeaderText')
+                local tip = LibTooltipExtra:New(shoppingTip)
+                tip:GetFontStringLeft(2):SetFontObject('GameTooltipHeaderText')
+                tip:GetFontStringRight(2):SetFontObject('GameTooltipHeaderText')
 
-            local i = 3
-            while tip:GetFontStringLeft(i) do
-                tip:GetFontStringLeft(i):SetFontObject('GameTooltipText')
-                tip:GetFontStringRight(i):SetFontObject('GameTooltipText')
+                local i = 3
+                while tip:GetFontStringLeft(i) do
+                    tip:GetFontStringLeft(i):SetFontObject('GameTooltipText')
+                    tip:GetFontStringRight(i):SetFontObject('GameTooltipText')
 
-                i = i + 1
+                    i = i + 1
+                end
             end
         end
     end
+
+    return true
 end
 
 function Item:OnTooltipCleared(rawTip)
@@ -166,11 +176,9 @@ function Item:OnCall(rawTip, method, ...)
         return
     end
 
-    local link
-    if APIS[method] then
+    local link = select(2, rawTip:GetItem())
+    if link and APIS[method] then
         link = APIS[method](...)
-    else
-        link = select(2, rawTip:GetItem())
     end
 
     if not link then

@@ -103,9 +103,34 @@ ns.C = ns.profiled(function(k)
     return colorHex(P.colors[k])
 end)
 
-ns.Tooltips = {'GameTooltip', 'ItemRefTooltip', 'WorldMapTooltip', 'tdDevToolsItemTip'}
+ns.Tooltips = {
+    'GameTooltip', 'ItemRefTooltip', 'WorldMapTooltip', 'tdDevToolsItemTip', 'BiaoGeTooltip', 'BiaoGeTooltip2',
+    'BiaoGeTooltip3', 'BiaoGeTooltip4', 'BiaoGeTooltip11', 'BiaoGeTooltip12', 'BiaoGeTooltip13', 'BiaoGeTooltip14',
+}
 
 ns.Frames = {
     'LibDBIconTooltip', 'AceGUITooltip', 'AceConfigDialogTooltip', 'FriendsTooltip', 'ChatMenu', 'EmoteMenu',
     'LanguageMenu', 'VoiceMacroMenu',
 }
+
+if BG then
+    local function SetupTip()
+        if BG.SetZUGSetTooltip then
+            setfenv(BG.SetZUGSetTooltip,
+                    setmetatable({BG = setmetatable({verLess3 = false}, {__index = BG})}, {__index = _G}))
+
+            hooksecurefunc(BG, 'SetZUGSetTooltip', function(_, point)
+                local p, a, rp, x, y = BiaoGeTooltip11:GetPoint()
+                if p then
+                    BiaoGeTooltip11:ClearAllPoints()
+                    BiaoGeTooltip11:SetPoint(p, a, rp, x, -10)
+                end
+            end)
+
+        elseif BG.Init2 then
+            BG.Init2(SetupTip)
+        end
+    end
+
+    SetupTip()
+end
